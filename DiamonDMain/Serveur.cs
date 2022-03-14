@@ -44,11 +44,11 @@ namespace DiamonDMain
         Console.WriteLine(e.ToString());
     }
     }
-        public static void CreateGamer(String tempName, String tempPWD)
+        public static void InsertGamer(String tempName, String tempPWD)
         {
             tempPWD = "0044";
 
-            String path = @"C:\Users\madyd\source\repos\Diamond\DiamonDMain\Ressources\" + tempName + tempPWD + ".yaml";
+            String path = @"\Diamond\Ressources\client.yaml";
             using (FileStream fs = File.Create(path))
             {
                 string str = templateYaml.Replace("<PORT>", endPoint.Port.ToString()).Replace("<PWD>", tempPWD).Replace("<NAME>", tempName).Replace("<ADRESS>", endPoint.Address.ToString());
@@ -58,9 +58,9 @@ namespace DiamonDMain
             }
 
         }
-        public static Boolean Connected(String tempName, String tempPWD)
+        public static Boolean Exists(String tempName, String tempPWD)
         {
-            String path = @"C:\Users\madyd\source\repos\Diamond\DiamonDMain\Ressources\" + tempName + tempPWD + ".yaml";
+            String path = @"\Diamond\Ressources\client.yaml";
             using (FileStream fs = File.OpenRead(path))
             {
                 byte[] buffer = new byte[fs.Length];
