@@ -69,7 +69,7 @@ namespace Server
         }
         public static Boolean Exists(String tempName, String tempPWD)
         {
-            String path = @"\Diamond\Ressources\client.yaml";
+            String path = @"\Client\Ressources\client.yaml";
             using (FileStream fs = File.OpenRead(path))
             {
                 byte[] buffer = new byte[fs.Length];

@@ -25,17 +25,17 @@ namespace DiamonDMain
             diamands += val;
         }
 
-        public bool Sortir()
+        public void Sortir()    
         {
             //Quand le joueur sort il garde ses diamands dans son coffre
-            if (this.exit)
-            {
+            //if (this.exit)
+            //{
+            //QUAND LE JOUEUR CHOISIT DE SORTIR, EN CONSOLE
                 chest.SetDiamonds(this.diamands);
-                return true;
-            }
-                
-
-            return false;
+                diamands = 0;
+                //return true;
+            //}
+            //return false;
         }
     }
 }
