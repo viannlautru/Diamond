@@ -67,15 +67,15 @@ namespace Server
             }
 
         }
-        public static Boolean Exists(String tempName, String tempPWD)
+        public static string Openleficher(String tempName, String tempPWD)
         {
-            String path = @"\Client\Ressources\client.yaml";
+            String path = @"Ressources\Server.yaml";
             using (FileStream fs = File.OpenRead(path))
             {
                 byte[] buffer = new byte[fs.Length];
                 if (fs.CanRead)
                     fs.Read(buffer, 0, (int)fs.Length);
-                return buffer[5].ToString() == tempName && buffer[7].ToString() == tempPWD;
+                return buffer.ToString();
             }
         }
         public static Ressources.Config DeserializeUser(String path)
