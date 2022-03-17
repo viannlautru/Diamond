@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -31,6 +32,17 @@ namespace Client
         static void Main(string[] args)
         {
 
+        }
+        private static void RecupConfig()
+        {
+                String path = @"\Client\Ressources\client.yaml";
+                using (FileStream fs = File.OpenRead(path))
+                {
+                    byte[] buffer = new byte[fs.Length];
+                    if (fs.CanRead)
+                        fs.Read(buffer, 0, (int)fs.Length);
+                     //buffer[5].ToString() == tempName && buffer[7].ToString() == tempPWD;
+                }
         }
     }
 }
