@@ -10,6 +10,8 @@ namespace DiamonDMain
         static void Main(string[] args)
         {
             Carte c = Tirercarte();
+           
+            
         }
         public static Carte Tirercarte()
         {

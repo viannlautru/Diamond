@@ -28,6 +28,8 @@ namespace DiamonDMain
     }
     public class Danger : Carte
     {
+        private string name;
+        private int quantity;
         public Danger() : base("Danger"){
 
         }
