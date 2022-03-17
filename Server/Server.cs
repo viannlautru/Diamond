@@ -41,6 +41,10 @@ namespace Server
                         break;
                 }
                 Console.WriteLine("Received: " + data);
+
+                DiamonDMain.ProtocolMessageServer protocol = new DiamonDMain.ProtocolMessageServer(1);
+                byte[] msg = Encoding.ASCII.GetBytes(protocol.ToString());
+                client.Send(msg);
             }
             catch (Exception e)
             {

@@ -19,8 +19,8 @@ namespace Client
                 byte[] msg = Encoding.ASCII.GetBytes("This is a test<EOF>");
                 int bytesSent = socket.Send(msg);
                 Console.WriteLine("Sent: " + bytesSent + " bytes.");
-                socket.Shutdown(SocketShutdown.Both);
-                socket.Close();
+                //socket.Shutdown(SocketShutdown.Both);
+                //socket.Close();
             }
             catch (Exception e)
             {
