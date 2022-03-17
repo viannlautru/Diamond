@@ -78,13 +78,6 @@ namespace Server
                 return buffer[5].ToString() == tempName && buffer[7].ToString() == tempPWD;
             }
         }
-        public static bool SerializeUser(Ressources.Config config)
-        {
-            string file = "Ressources/Server.yaml";
-            string yaml = JsonSerializer.Serialize(config);
-            File.WriteAllText(file, yaml);
-            return true;
-        }
         public static Ressources.Config DeserializeUser(String path)
         {
             Stream stream = File.Open(path, FileMode.Open);
