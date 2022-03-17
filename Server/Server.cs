@@ -12,12 +12,12 @@ namespace Server
         private static IPAddress ip;
         private static IPEndPoint endPoint;
         private static Socket listener;
-        private static string name;
-        private static int port;
-        private static string password;
-        private static int max_connextions;
-        private static int timeout;
-        private static DiamonDMain.Partie game;
+        //private static string name;
+        //private static int port;
+        //private static string password;
+        //private static int max_connextions;
+        //private static int timeout;
+        //private static DiamonDMain.Partie game;        
 
         public static void Start()
         {
