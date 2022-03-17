@@ -13,9 +13,8 @@ namespace DiamonDMain
         private Dictionary<string, Carte> decouvertes;
 
         //Contructeur
-        public Coffre_fort(string leName)
+        public Coffre_fort()
         {
-            this.name = leName;
             this.diamonds = 0;
             this.decouvertes = new Dictionary<string, Carte>();
         }
