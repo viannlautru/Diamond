@@ -41,8 +41,6 @@ namespace Server
                         break;
                 }
                 Console.WriteLine("Received: " + data);
-                client.Shutdown(SocketShutdown.Both);
-                client.Close();
             }
             catch (Exception e)
             {
@@ -78,6 +76,7 @@ namespace Server
         static void Main(string[] args)
         {
             Start();
+            Console.ReadLine();
         }
     }
 }

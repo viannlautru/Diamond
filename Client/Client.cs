@@ -28,9 +28,8 @@ namespace Client
             }
         }
 
-        static void Main(string[] args)
-        {
 
-        }
+
+        
     }
 }
