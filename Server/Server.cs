@@ -6,18 +6,25 @@ using System.Text;
 
 namespace Server
 {
-    class Server
+    public class Server
     {
         private static string templateYaml = @"address: string         port: int       password: string        name: string";
         private static IPAddress ip;
         private static IPEndPoint endPoint;
         private static Socket listener;
+        private static string name;
+        private static int port;
+        private static string password;
+        private static int max_connextions;
+        private static int timeout;
+        private static DiamonDMain.Partie game;
+
         public static void Start()
         {
 
             byte[] buffer = new byte[1024];
             string data = null;
-            ip = new IPAddress(new byte[] { 127, 0, 0, 0 });
+            ip = new IPAddress(new byte[] { 127, 0, 0, 1 });
             endPoint = new IPEndPoint(ip, 1234);
             listener = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
@@ -67,9 +74,10 @@ namespace Server
                 return buffer[5].ToString() == tempName && buffer[7].ToString() == tempPWD;
             }
         }
+
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+
         }
     }
 }

@@ -28,6 +28,8 @@ namespace DiamonDMain
     }
     public class Danger : Carte
     {
+        private string name;
+        private int quantity;
         public Danger() : base("Danger"){
 
         }
@@ -52,7 +54,7 @@ namespace DiamonDMain
             var rand = new Random();
             montant = rand.Next(1000);
         }
-        public int Partager(Dictionary)
+        public int Partager()
         {
             return (montant - montant%GetInstances())/GetInstances();
         }

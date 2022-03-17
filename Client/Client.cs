@@ -7,14 +7,9 @@ namespace Client
 {
     class Client
     {
-        static void Main(string[] args)
-        {
-            Console.WriteLine("Hello World!");
-        }
-
         public void Connect()
         {
-            IPAddress ip = new IPAddress(new Byte[] { 127, 0, 0, 0 });
+            IPAddress ip = new IPAddress(new Byte[] { 127, 0, 0, 1 });
             IPEndPoint endPoint = new IPEndPoint(ip, 1234);
             try
             {
@@ -31,6 +26,11 @@ namespace Client
             {
                 Console.WriteLine("Unexpected exception : {0}", e.ToString());
             }
+        }
+
+        static void Main(string[] args)
+        {
+
         }
     }
 }
