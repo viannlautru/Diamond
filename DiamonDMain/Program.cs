@@ -13,8 +13,13 @@ namespace DiamonDMain
         }
         public static Carte Tirercarte()
         {
+            Carte c = null;
+            if("" == "")
+            {
             var rand = new Random();
-            return (Carte)a[rand.Next(a.Count)];
+            c = (Carte)a[rand.Next(a.Count)];
+            }
+            return c; 
         }
     }
 }

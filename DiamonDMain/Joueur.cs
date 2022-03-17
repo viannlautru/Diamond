@@ -10,10 +10,15 @@ namespace DiamonDMain
     {
         private string nom;
         private int diamands { set; get; }
+
         Joueur(String nom)
         {
             this.nom = nom;
             diamands = 0;
+        }
+        void AddDamond(int val)
+        {
+            diamands += val;
         }
     }
 }

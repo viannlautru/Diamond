@@ -49,9 +49,10 @@ namespace DiamonDMain
         private int montant = 0;
         public Tresor() : base("Tresor")
         {
-
+            var rand = new Random();
+            montant = rand.Next(1000);
         }
-        public int Partager()
+        public int Partager(Dictionary)
         {
             return (montant - montant%GetInstances())/GetInstances();
         }
