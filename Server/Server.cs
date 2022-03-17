@@ -2,7 +2,9 @@
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Text.Json;
 
 namespace Server
 {
@@ -75,6 +77,21 @@ namespace Server
                     fs.Read(buffer, 0, (int)fs.Length);
                 return buffer[5].ToString() == tempName && buffer[7].ToString() == tempPWD;
             }
+        }
+        public static bool SerializeUser(Ressources.Config config)
+        {
+            string file = "Ressources/Server.yaml";
+            string yaml = JsonSerializer.Serialize(config);
+            File.WriteAllText(file, yaml);
+            return true;
+        }
+        public static Ressources.Config DeserializeUser(String path)
+        {
+            Stream stream = File.Open(path, FileMode.Open);
+            BinaryFormatter formatter = new BinaryFormatter();
+            Ressources.Config user = (Ressources.Config)formatter.Deserialize(stream);
+            stream.Close();
+            return user;
         }
 
         static void Main(string[] args)
