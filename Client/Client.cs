@@ -20,8 +20,8 @@ namespace Client
                 byte[] msg = Encoding.ASCII.GetBytes("This is a test<EOF>");
                 int bytesSent = socket.Send(msg);
                 Console.WriteLine("Sent: " + bytesSent + " bytes.");
-                socket.Shutdown(SocketShutdown.Both);
-                socket.Close();
+                //socket.Shutdown(SocketShutdown.Both);
+                //socket.Close();
             }
             catch (Exception e)
             {
@@ -29,20 +29,8 @@ namespace Client
             }
         }
 
-        static void Main(string[] args)
-        {
 
-        }
-        private static void RecupConfig()
-        {
-                String path = @"\Client\Ressources\client.yaml";
-                using (FileStream fs = File.OpenRead(path))
-                {
-                    byte[] buffer = new byte[fs.Length];
-                    if (fs.CanRead)
-                        fs.Read(buffer, 0, (int)fs.Length);
-                     //buffer[5].ToString() == tempName && buffer[7].ToString() == tempPWD;
-                }
-        }
+
+        
     }
 }

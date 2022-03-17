@@ -12,12 +12,12 @@ namespace Server
         private static IPAddress ip;
         private static IPEndPoint endPoint;
         private static Socket listener;
-        private static string name;
-        private static int port;
-        private static string password;
-        private static int max_connextions;
-        private static int timeout;
-        private static DiamonDMain.Partie game;
+        //private static string name;
+        //private static int port;
+        //private static string password;
+        //private static int max_connextions;
+        //private static int timeout;
+        //private static DiamonDMain.Partie game;        
 
         public static void Start()
         {
@@ -41,8 +41,10 @@ namespace Server
                         break;
                 }
                 Console.WriteLine("Received: " + data);
-                client.Shutdown(SocketShutdown.Both);
-                client.Close();
+
+                DiamonDMain.ProtocolMessageServer protocol = new DiamonDMain.ProtocolMessageServer(1);
+                byte[] msg = Encoding.ASCII.GetBytes(protocol.ToString());
+                client.Send(msg);
             }
             catch (Exception e)
             {
@@ -78,6 +80,7 @@ namespace Server
         static void Main(string[] args)
         {
             Start();
+            Console.ReadLine();
         }
     }
 }

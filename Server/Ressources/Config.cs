@@ -11,5 +11,7 @@ namespace Server.Ressources
         private string name;
         private List<Server> configurations;
         private List<DiamonDMain.Partie> games;
+
+
     }
 }
