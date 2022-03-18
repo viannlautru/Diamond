@@ -5,7 +5,9 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Text.Json;
 
 namespace Server
 {
@@ -163,16 +165,24 @@ namespace Server
             }
 
         }
-        public static Boolean Exists(String tempName, String tempPWD)
+        public static string Openleficher(String tempName, String tempPWD)
         {
-            String path = @"\Diamond\Ressources\client.yaml";
+            String path = @"Ressources\Server.yaml";
             using (FileStream fs = File.OpenRead(path))
             {
                 byte[] buffer = new byte[fs.Length];
                 if (fs.CanRead)
                     fs.Read(buffer, 0, (int)fs.Length);
-                return buffer[5].ToString() == tempName && buffer[7].ToString() == tempPWD;
+                return buffer.ToString();
             }
+        }
+        public static Ressources.Config DeserializeUser(String path)
+        {
+            Stream stream = File.Open(path, FileMode.Open);
+            BinaryFormatter formatter = new BinaryFormatter();
+            Ressources.Config user = (Ressources.Config)formatter.Deserialize(stream);
+            stream.Close();
+            return user;
         }
 
         
