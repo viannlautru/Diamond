@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 
@@ -12,12 +15,12 @@ namespace Server
         private static IPAddress ip;
         private static IPEndPoint endPoint;
         private static Socket listener;
-        //private static string name;
-        //private static int port;
-        //private static string password;
-        //private static int max_connextions;
-        //private static int timeout;
-        //private static DiamonDMain.Partie game;        
+        private static string name;
+        private static int port;
+        private static string password;
+        private static int max_connextions;
+        private static int timeout;
+        private static DiamonDMain.Partie game;
 
         public static void Start()
         {
@@ -33,24 +36,119 @@ namespace Server
                 listener.Bind(endPoint);
                 listener.Listen(6);
                 Socket client = listener.Accept();
-                while (true)
-                {
-                    int length = client.Receive(buffer);
-                    data += Encoding.ASCII.GetString(buffer, 0, length);
-                    if (data.IndexOf("<EOF>") > -1)
-                        break;
-                }
-                Console.WriteLine("Received: " + data);
 
-                DiamonDMain.ProtocolMessageServer protocol = new DiamonDMain.ProtocolMessageServer(1);
-                byte[] msg = Encoding.ASCII.GetBytes(protocol.ToString());
-                client.Send(msg);
+                int length = client.Receive(buffer);
+                byte[] msg = null;
+                int bytesSent = 0;
+                string notOK = "KO";
+
+                //Envoi du protocol à sérialiser (1)             
+                string envoiProtocol = SendProtocol(client);
+                if (envoiProtocol == notOK)
+                {
+                    msg = Encoding.ASCII.GetBytes(notOK);
+                    bytesSent = client.Send(msg);
+                }                
+
+                //Reçoit réponse protocol + name + password à désérialiser (4)
+                //Reçoit name
+                data += Encoding.ASCII.GetString(buffer, 0, length);
+                string name = data;
+
+                //Reçoit password
+                data += Encoding.ASCII.GetString(buffer, 0, length);
+                string password = data;
+
+                //Envoi ID (5)                
+                string envoiID = SendID(client);
+                if (envoiID == notOK)
+                {
+                    msg = Encoding.ASCII.GetBytes(notOK);
+                    bytesSent = client.Send(msg);
+                }
+
+                //Envoi port (5)
+                string envoiPort = SendPort(client);
+                if (envoiPort == notOK)
+                {
+                    msg = Encoding.ASCII.GetBytes(notOK);
+                    bytesSent = client.Send(msg);
+                }
+
+                //Envoi OK ou KO si connexion accepté (5)
+                if (envoiProtocol != notOK && envoiID != notOK && envoiPort != notOK)
+                {
+                    msg = Encoding.ASCII.GetBytes("OK");
+                    bytesSent = client.Send(msg);
+                }
+
+                listener.Dispose();
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
+                
             }
         }
+
+        public static string SendProtocol(Socket client)
+        {
+            string response = "OK";
+
+            DiamonDMain.ProtocolMessageServer protocol = new DiamonDMain.ProtocolMessageServer(1);
+            //Convertir le protocol
+            //
+
+            byte[] msg = Encoding.ASCII.GetBytes(protocol.ToString());
+            int bytesSent = client.Send(msg);
+            if (msg == null || bytesSent == 0)
+                response = "KO";
+
+            return response;
+        }
+
+        public static string SendID(Socket client)
+        {            
+            string response = "OK";
+
+            //On créer une chaine de nombre aléatoire
+            Random aleatoire = new Random();
+            int taille = aleatoire.Next(10, 20); //chiffre entre 10 et 20                
+            string ID = "";
+            for (int i = 0; i < taille; i++)
+            {
+                int chiffre = aleatoire.Next(10);
+                ID += chiffre;
+            }
+
+            byte[] msg = Encoding.ASCII.GetBytes(ID);
+            int bytesSent = client.Send(msg);
+            if (msg == null || bytesSent == 0)
+                response = "KO";
+
+            return response;
+        }
+
+        public static string SendPort(Socket client)
+        {
+            string response = "OK";
+
+            //On ouvre un socket pour trouver un port disponible
+            Socket portSocket = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            IPEndPoint end = new IPEndPoint(ip, 0);
+            portSocket.Bind(end);
+
+            int port = ((IPEndPoint)portSocket.LocalEndPoint).Port;
+            byte[] msg = Encoding.ASCII.GetBytes(port.ToString());
+            int bytesSent = client.Send(msg);
+            portSocket.Dispose();
+
+            if (msg == null || bytesSent == 0)
+                response = "KO";
+
+            return response;
+        }
+
         public static void InsertGamer(String tempName, String tempPWD)
         {
             tempPWD = "0044";
@@ -76,6 +174,8 @@ namespace Server
                 return buffer[5].ToString() == tempName && buffer[7].ToString() == tempPWD;
             }
         }
+
+        
 
         static void Main(string[] args)
         {

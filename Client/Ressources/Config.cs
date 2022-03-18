@@ -6,26 +6,18 @@ using System.Threading.Tasks;
 
 namespace Client.Ressources
 {
-    class Config
+    static class Config
     {
-        private string address;
-        private int port;
-        private string password;
-        private string name;
+        private static string address;
+        private static int port;
+        private static string password = "123";
+        private static string name = "client";
 
-        //Constructeur
-        public Config(string lAddress, int lePort, string lePassword, string leName)
-        {
-            this.address = lAddress;
-            this.port = lePort;
-            this.password = lePassword;
-            this.name = leName;
-        }
 
         //Getters
-        public string GetAddress() { return this.address; }
-        public int GetPort() { return this.port; }
-        public string GetPassword() { return this.password; }
-        public string GetName() { return this.name; }
+        public static string GetAddress() { return address; }
+        public static int GetPort() { return port; }
+        public static string GetPassword() { return password; }
+        public static string GetName() { return name; }
     }
 }

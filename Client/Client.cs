@@ -13,14 +13,51 @@ namespace Client
             IPEndPoint endPoint = new IPEndPoint(ip, 1234);
             try
             {
-                Socket socket = new Socket(ip.AddressFamily,
-                SocketType.Stream, ProtocolType.Tcp);
+                Socket socket = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 socket.Connect(endPoint);
                 byte[] msg = Encoding.ASCII.GetBytes("This is a test<EOF>");
                 int bytesSent = socket.Send(msg);
                 Console.WriteLine("Sent: " + bytesSent + " bytes.");
-                //socket.Shutdown(SocketShutdown.Both);
-                //socket.Close();
+
+                //Reçoit le protocole et le désérialise (2)
+                byte[] buffer = new byte[1024];
+                string data = null;
+
+                int length = socket.Receive(buffer);
+
+                //Renvoi la réponse du protocole (ProtocolMessageClient) sérialisé (3)
+
+                //Envoi name (3)
+                string name = Ressources.Config.GetName();
+                msg = Encoding.ASCII.GetBytes(name);
+                bytesSent = socket.Send(msg);
+
+                //Envoi password (3)
+                string password = Ressources.Config.GetPassword();
+                msg = Encoding.ASCII.GetBytes(password);
+                bytesSent = socket.Send(msg);
+
+                //Reçoit ID + Port + OK ou KO (6)
+                data += Encoding.ASCII.GetString(buffer, 0, length);
+                string ID = data;
+
+                data += Encoding.ASCII.GetString(buffer, 0, length);
+                string port = data;
+
+                data += Encoding.ASCII.GetString(buffer, 0, length);
+                string OK = data;
+
+                if (OK == "ok")
+                {
+
+                }
+                else
+                {
+                    socket.Shutdown(SocketShutdown.Both);
+                    socket.Close();
+                }
+
+
             }
             catch (Exception e)
             {
