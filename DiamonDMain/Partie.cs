@@ -10,26 +10,30 @@ namespace DiamonDMain
     {
         private string id;
         private int max_players;
-        private int caves;
+        private Dictionary<int, Grotte> caves;
         private int cards_quantity;
         private List<DiamonDMain.Danger> traps;
         private int type;   //Standard pour l'instant type = 0 partie rapide : type = 1
+        private Dictionary<int, Joueur> Joueurgrotte;
+
         //private Dictionary<int, Grotte> grottes;
 
         //Partie rapide => 2 grottes
-        public Partie(int type = 0)
+        public Partie(Dictionary<int, Joueur> Joueurgrotte, int type = 0)
         {
             this.type = type;
+            this.Joueurgrotte = Joueurgrotte;
+            CreateCaves();
+        }
+        public void CreateCaves()
+        {
             if (type == 0)
             {
                 for (int i = 1; i <= 5; i++)
-                {                    
-                    //grottes.Add(i, new Grotte());
+                {
+                    caves.Add(i, new Grotte());
                 }
-                    
             }
-
-
         }
     }
 }

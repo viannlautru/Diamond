@@ -11,10 +11,9 @@ namespace DiamonDMain
         private bool Etat;
         private Dictionary<int, Joueur> Joueurgrotte;
 
-        public Grotte (Dictionary<int, Joueur> Joueur)
+        public Grotte ()
         {
             this.Etat = true;
-            this.Joueurgrotte = Joueur;
         }
         public bool getEtatGrotte()
         {
@@ -28,7 +27,10 @@ namespace DiamonDMain
         {
             return Joueurgrotte;
         }
-        
+        public void Initjoueurs(Dictionary<int, Joueur> Joueur)
+        {
+            this.Joueurgrotte = Joueur;
+        }
         public int removeUtilisateur(int joueur)
         {
             Joueurgrotte.Remove(joueur);

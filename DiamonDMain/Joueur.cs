@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DiamonDMain
 {
-    class Joueur
+    public class Joueur
     {
         private string nom;
         private bool exit;
@@ -14,7 +14,7 @@ namespace DiamonDMain
 
         private int diamands { set; get; }
 
-        Joueur(String nom)
+        public Joueur(String nom)
         {
             this.nom = nom;
             diamands = 0;
