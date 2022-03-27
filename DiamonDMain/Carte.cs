@@ -30,12 +30,12 @@ namespace DiamonDMain
     {
         private string name;
         private int quantity;
-        public Danger() : base("Danger"){
-
+        public Danger(String name) : base("Danger"){
+            this.name = name;
         }
-        public String Piege()
+        public String GetPiege()
         {
-            return "Boum";
+            return this.name;
         }
     }
     public class Trophee : Carte
@@ -44,7 +44,10 @@ namespace DiamonDMain
         {
 
         }
-
+        public Trophee GetTrophee()
+        {
+            return this;
+        }
     }
     public class Tresor : Carte
     {

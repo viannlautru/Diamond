@@ -24,14 +24,14 @@ namespace DiamonDMain
         {
             diamands += val;
         }
-
+        String GetNom() { return this.nom; }
         public void Sortir()    
         {
             //Quand le joueur sort il garde ses diamands dans son coffre
             //if (this.exit)
             //{
             //QUAND LE JOUEUR CHOISIT DE SORTIR, EN CONSOLE
-                chest.SetDiamonds(this.diamands);
+                chest.AddDiamonds(this.diamands);
                 diamands = 0;
                 //return true;
             //}

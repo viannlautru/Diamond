@@ -26,5 +26,6 @@ namespace DiamonDMain
 
         //Setters
         public void SetDiamonds(int theDiamonds) { this.diamonds = theDiamonds; }
+        public void AddDiamonds(int theDiamonds) { this.diamonds += theDiamonds; }
     }
 }
