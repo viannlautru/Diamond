@@ -30,7 +30,7 @@ namespace DiamonDMain
     {
         private string name;
         private int quantity;
-        public Danger(String name) : base("Danger"){
+        public Danger(String name = "") : base("Danger"){
             this.name = name;
         }
         public String GetPiege()
