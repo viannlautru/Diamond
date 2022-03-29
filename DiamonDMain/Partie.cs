@@ -14,7 +14,9 @@ namespace DiamonDMain
         private int cards_quantity;
         private List<DiamonDMain.Danger> traps;
         private int type;   //Standard pour l'instant type = 0 partie rapide : type = 1
-        private Dictionary<string, Joueur> Joueurgrotte;
+        private Dictionary<string, Joueur> Joueurgrotte; 
+        public Grotte laGrotte;
+        public Camp leCamp;
 
         //private Dictionary<int, Grotte> grottes;
 
@@ -40,5 +42,21 @@ namespace DiamonDMain
                 }
             }
         }
+        public void Fingrotte(){
+            for (var i =0; i >= laGrotte.getjoueurGrotte().Count; i++) {
+                //enleve les joueurs de la grotte et les mets dans le camp
+                leCamp.addCampUtilisateur(laGrotte.Joueurgrotte.Keys.ElementAt(i)) ;
+            }
+        }
+        public void debutgrotte()
+        {
+            for (var i = 0; i >= leCamp.getjoueurCamp().Count; i++)
+            {
+                //ajout des joueurs dans la grotte
+                laGrotte.addGrotteUtilisateur(leCamp.JoueurCamp.Keys.ElementAt(i));
+            }
+        }
+
+
     }
 }

@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace DiamonDMain
 {
-    class Grotte
+    public class Grotte
     {
-        private bool Etat;
-        private Dictionary<int, Joueur> Joueurgrotte;
+        public bool Etat;
+        public Dictionary<int, Joueur> Joueurgrotte;
+        public Camp leCamp;
 
         public Grotte ()
         {
@@ -31,9 +32,13 @@ namespace DiamonDMain
         {
             this.Joueurgrotte = Joueur;
         }
-        public int removeUtilisateur(int joueur)
+        public int addGrotteUtilisateur(int joueur)
         {
-            Joueurgrotte.Remove(joueur);
+            foreach (var p in leCamp.JoueurCamp) {
+                if(p.Key == joueur)
+                    Joueurgrotte.Add(joueur,p.Value);
+            }
+            leCamp.JoueurCamp.Remove(joueur);
             return joueur;
         }
     }

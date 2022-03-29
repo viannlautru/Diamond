@@ -40,9 +40,11 @@ namespace DiamonDMain
     }
     public class Trophee : Carte
     {
+        private int montantTrophe = 0;
         public Trophee() : base("Trophee")
         {
-
+            var rand = new Random();
+            montantTrophe = rand.Next(1000);
         }
         public Trophee GetTrophee()
         {
@@ -51,15 +53,15 @@ namespace DiamonDMain
     }
     public class Tresor : Carte
     {
-        private int montant = 0;
+        private int montantTresor = 0;
         public Tresor() : base("Tresor")
         {
             var rand = new Random();
-            montant = rand.Next(1000);
+            montantTresor = rand.Next(1000);
         }
         public int Partager()
         {
-            return (montant - montant%GetInstances())/GetInstances();
+            return (montantTresor - montantTresor% GetInstances())/GetInstances();
         }
     }
 }
