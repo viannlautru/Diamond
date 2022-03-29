@@ -79,31 +79,38 @@ namespace ClientTest
 
                 if (OK == "OK")
                 {
-                    //Client se connecte à la salle (7)
+                    //On se déconnecte du premier server
                     socket.Close();
-                    RoomConnect(port);
+
+                    //Client se connecte à la salle (7)
+                    Socket room = RoomConnect(port);
 
                     //Envoi ID (7)
                     byte[] msg = Encoding.ASCII.GetBytes(ID);
-                    bytesSent = socket.Send(msg);
+                    bytesSent = room.Send(msg);
 
                     //Envoi password (7)
                     if (password == null)
-                        Stop(socket);
+                        Stop(room);
                     else
                     {
                         msg = Encoding.ASCII.GetBytes(password);
-                        bytesSent = socket.Send(msg);
+                        bytesSent = room.Send(msg);
                     }
 
                     //Reçoit confirmation (10)
-                    length = socket.Receive(buffer);
+                    length = room.Receive(buffer);
                     data = Encoding.ASCII.GetString(buffer, 0, length);
-                    CheckKO(data, socket);
+                    CheckKO(data, room);
                     OK = data;
 
                     if (OK == "KO")
-                        Stop(socket);
+                        Stop(room);
+                    //Lance jeu
+                    else
+                    {
+
+                    }
                 }
                 //Déconnexion
                 else
@@ -132,7 +139,7 @@ namespace ClientTest
             Environment.Exit(1);
         }
 
-        public void RoomConnect(int port)
+        public Socket RoomConnect(int port)
         {
             //on se connecte à la salle
             IPAddress ip = new IPAddress(new byte[] { 127, 0, 0, 1 });            
@@ -141,17 +148,7 @@ namespace ClientTest
 
             room.Connect(newEndPoint);
             Console.WriteLine("Vous êtes dans une salle.");
+            return room;
         }
-
-        //public void StartRoom()
-        //{
-        //    IPEndPoint newEndPoint = new IPEndPoint(ip, port);
-        //    newSocket.Connect(newEndPoint);
-        //    Console.WriteLine("Vous êtes dans une salle.");
-        //}
-
-
-
-
     }
 }

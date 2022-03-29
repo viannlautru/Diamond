@@ -31,117 +31,47 @@ namespace Server
         private static byte[] msgKO = Encoding.ASCII.GetBytes("KO");
 
         private static int connexions = 0;
+        private static Dictionary<string, DiamonDMain.Joueur> joueurs = new Dictionary<string, DiamonDMain.Joueur>();
+
+        private static DiamonDMain.Joueur player1;
+        private static DiamonDMain.Joueur player2;
 
         public static void Start()
-        {           
-            byte[] buffer = new byte[1024];
-            string data = null;
+        {                      
             ip = new IPAddress(new byte[] { 127, 0, 0, 1 });
             endPoint = new IPEndPoint(ip, port);
             listener = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
+            listener.Bind(endPoint);
+            listener.Listen(6);
             try
             {
-                listener.Bind(endPoint);
-                listener.Listen(6);
-                Socket client = listener.Accept();
-                
-                byte[] msg = null;
-                int bytesSent = 0;
-                string notOK = "KO";
-
-                //Envoi du protocol à sérialiser (1)             
-                bool envoiProtocol = SendProtocol(client);
-                if (!envoiProtocol)
-                    client.Close();                 
-
-                //Reçoit réponse protocol + name + password à désérialiser (4)
-                //Reçoit protocol
-                int length = client.Receive(buffer);
-                string json = Encoding.ASCII.GetString(buffer, 0, length);
-                DiamonDMain.ProtocolMessageServer protocol = null;
-                protocol = JsonConvert.DeserializeObject<DiamonDMain.ProtocolMessageServer>(json);
-
-                //Reçoit name
-                length = client.Receive(buffer);
-                data = Encoding.ASCII.GetString(buffer, 0, length);
-                string nameClient = data;
-
-                //Reçoit password
-                length = client.Receive(buffer);
-                data = Encoding.ASCII.GetString(buffer, 0, length);
-                string passwordClient = data;
-
-                //Vérifier name et password
-                if (name == nameClient && password == passwordClient)
+                while (connexions <= max_connexions)
                 {
-                    //Envoi ID (5)                
-                    bool envoiID = SendID(client);
-                    if (!envoiID)
-                        client.Close();
-
-                    //Envoi port (5)
-                    int roomPort = SendPort(client);
-                    if (roomPort == -1)
-                        client.Close();
-
-                    //Envoi OK ou KO si connexion accepté(5) et créer la room
-                    if (envoiProtocol && envoiID && roomPort != -1)
-                    {
-                        SenOKorKO(1, client);
-                        Socket clientConnect = CreateRoom(roomPort);
-                        connexions++;
-
-                        //Reçoit ID + password (8)
-                        length = client.Receive(buffer);
-                        data = Encoding.ASCII.GetString(buffer, 0, length);
-                        string playerID = data;
-
-                        length = client.Receive(buffer);
-                        data = Encoding.ASCII.GetString(buffer, 0, length);
-                        passwordClient = data;
-
-                        //Envoi OK (9)
-                        if (password == passwordClient)
-                            SenOKorKO(1, client);
-                        else
-                            SenOKorKO(0, client);
-
-                        Dictionary<string, DiamonDMain.Joueur> joueurs = new Dictionary<string, DiamonDMain.Joueur>();
-
-                        if (connexions == 1)
-                        {
-                            DiamonDMain.Joueur player1 = new DiamonDMain.Joueur(passwordClient, ClientTest.Ressources.Player1.GetName(),
-                                playerID, port);
-                            joueurs.Add(playerID, player1);
-                        }
-                        else if (connexions == 2)
-                        {
-                            DiamonDMain.Joueur player2 = new DiamonDMain.Joueur(passwordClient, ClientTest.Ressources.Player2.GetName(),
-                                playerID, port);
-                            joueurs.Add(playerID, player2);
-                        }
-
-                        //Démarrer jeu
-                        if (connexions == max_connexions)
-                        {
-                            DiamonDMain.Partie game = new DiamonDMain.Partie(joueurs);
-                        }
-                    }
-                    else
-                        SenOKorKO(0, client);
+                    Socket client = listener.Accept();
+                    ConnectClient(client);
+                    ListenNewClient();
                 }
-                else
-                    SenOKorKO(0, client);
                 
 
-                
+
+
+
+
+
+                //Démarrer jeu
+                if (connexions == max_connexions)
+                {
+                    DiamonDMain.Partie game = new DiamonDMain.Partie(joueurs);
+                }
+
                 //listener.Dispose();
+                
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
-                
+
             }
         }
         
@@ -234,6 +164,113 @@ namespace Server
                 client.Close();
             }
         }        
+
+        public static void ConnectClient(Socket client)
+        {
+            byte[] buffer = new byte[1024];
+            string data = null;           
+
+            byte[] msg = null;
+            int bytesSent = 0;
+            string notOK = "KO";
+
+            //Envoi du protocol à sérialiser (1)             
+            bool envoiProtocol = SendProtocol(client);
+            if (!envoiProtocol)
+                client.Close();
+
+            //Reçoit réponse protocol + name + password à désérialiser (4)
+            //Reçoit protocol
+            int length = client.Receive(buffer);
+            string json = Encoding.ASCII.GetString(buffer, 0, length);
+            DiamonDMain.ProtocolMessageServer protocol = null;
+            protocol = JsonConvert.DeserializeObject<DiamonDMain.ProtocolMessageServer>(json);
+
+            //Reçoit name
+            length = client.Receive(buffer);
+            data = Encoding.ASCII.GetString(buffer, 0, length);
+            string nameClient = data;
+
+            //Reçoit password
+            length = client.Receive(buffer);
+            data = Encoding.ASCII.GetString(buffer, 0, length);
+            string passwordClient = data;
+
+            //Vérifier name et password
+            if (name == nameClient && password == passwordClient)
+            {
+                //Envoi ID (5)                
+                bool envoiID = SendID(client);
+                if (!envoiID)
+                    client.Close();
+
+                //Envoi port (5)
+                int roomPort = SendPort(client);
+                if (roomPort == -1)
+                    client.Close();
+
+                //Envoi OK ou KO si connexion accepté(5) et créer la room
+                if (envoiProtocol && envoiID && roomPort != -1)
+                {
+                    SenOKorKO(1, client);
+                    Socket clientConnect = CreateRoom(roomPort);
+                    connexions++;
+
+                    //Reçoit ID + password (8)
+                    length = clientConnect.Receive(buffer);
+                    data = Encoding.ASCII.GetString(buffer, 0, length);
+                    string playerID = data;
+
+                    length = clientConnect.Receive(buffer);
+                    data = Encoding.ASCII.GetString(buffer, 0, length);
+                    passwordClient = data;
+
+                    //Envoi OK (9)
+                    if (password == passwordClient)
+                    {
+                        SenOKorKO(1, clientConnect);
+                        CreatePlayer(passwordClient, playerID);
+                    }
+                    else
+                    {
+                        SenOKorKO(0, clientConnect);
+                    }
+                }
+                else
+                {
+                    SenOKorKO(0, client);
+                }
+            }
+            else
+            {
+                SenOKorKO(0, client);
+            }
+
+            //listener.Dispose();
+        }
+
+        public static void CreatePlayer(string passwordClient, string playerID)
+        {
+            if (connexions == 1)
+            {
+                player1 = new DiamonDMain.Joueur(passwordClient, ClientTest.Ressources.Player1.GetName(),
+                    playerID, port);
+                joueurs.Add(playerID, player1);
+            }
+            if (connexions == 2)
+            {
+                player2 = new DiamonDMain.Joueur(passwordClient, ClientTest.Ressources.Player2.GetName(),
+                    playerID, port);
+                joueurs.Add(playerID, player2);
+            }
+        }
+    
+
+        public static void ListenNewClient()
+        {            
+            Socket client = listener.Accept();
+            ConnectClient(client);
+        }
 
         public static void InsertGamer(String tempName, String tempPWD)
         {
