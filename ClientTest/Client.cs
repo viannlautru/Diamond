@@ -80,37 +80,41 @@ namespace ClientTest
                 if (OK == "OK")
                 {
                     //On se déconnecte du premier server
-                    socket.Close();
+                    //socket.Close();
 
                     //Client se connecte à la salle (7)
-                    Socket room = RoomConnect(port);
-
-                    //Envoi ID (7)
-                    byte[] msg = Encoding.ASCII.GetBytes(ID);
-                    bytesSent = room.Send(msg);
-
-                    //Envoi password (7)
-                    if (password == null)
-                        Stop(room);
-                    else
+                    var thread = new Thread(() =>
                     {
-                        msg = Encoding.ASCII.GetBytes(password);
+                        Socket room = RoomConnect(port);
+
+                        //Envoi ID (7)
+                        byte[] msg = Encoding.ASCII.GetBytes(ID);
                         bytesSent = room.Send(msg);
-                    }
 
-                    //Reçoit confirmation (10)
-                    length = room.Receive(buffer);
-                    data = Encoding.ASCII.GetString(buffer, 0, length);
-                    CheckKO(data, room);
-                    OK = data;
+                        //Envoi password (7)
+                        if (password == null)
+                            Stop(room);
+                        else
+                        {
+                            msg = Encoding.ASCII.GetBytes(password);
+                            bytesSent = room.Send(msg);
+                        }
 
-                    if (OK == "KO")
-                        Stop(room);
-                    //Lance jeu
-                    else
-                    {
+                        //Reçoit confirmation (10)
+                        length = room.Receive(buffer);
+                        data = Encoding.ASCII.GetString(buffer, 0, length);
+                        CheckKO(data, room);
+                        OK = data;
 
-                    }
+                        if (OK == "KO")
+                            Stop(room);
+                        //Lance jeu
+                        else
+                        {
+
+                        }
+                    });
+                    thread.Start();
                 }
                 //Déconnexion
                 else
