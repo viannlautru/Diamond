@@ -17,6 +17,8 @@ namespace DiamonDMain
         private Dictionary<string, Joueur> Joueurgrotte; 
         public Grotte laGrotte;
         public Camp leCamp;
+        public Joueur joueur;
+        public Dictionary<int, Carte> toueCarte;
 
         //private Dictionary<int, Grotte> grottes;
 
@@ -42,6 +44,24 @@ namespace DiamonDMain
                 }
             }
         }
+
+        public void CreaCarte()
+        {
+            //Creation du packet de carte on divise part 4 pour les 4 type de cartes on avoir un bon nombre égale de carte
+            //n est la récupération de la quantité de carte dans le dossier config de la partie
+            var i = 0;
+            var n = 15;
+            while (i < n)
+            {
+                if(i<=n/3)
+                    toueCarte.Add(i,new Carte(new Danger().GetPiege()));
+                else if (i <= n / 3 * 2)
+                    toueCarte.Add(i, new Carte(new Danger().GetPiege()));
+                else  
+                    toueCarte.Add(i, new Carte(new Danger().GetPiege()));
+                i++;
+            }
+        }
         public void Fingrotte(){
             for (var i =0; i >= laGrotte.getjoueurGrotte().Count; i++) {
                 //enleve les joueurs de la grotte et les mets dans le camp
@@ -57,6 +77,22 @@ namespace DiamonDMain
             }
         }
 
+        public bool Continuer()
+        {
+            if (laGrotte.getjoueurGrotte().Count <= 0)
+                return false;
+            else
+                return true;
+        }
+        public bool tirageCarte()
+        {
+            //tirage aléatoire sur la liste toueCarte qui est comme la pioche 
+            for (var i = 0; i >= leCamp.getjoueurCamp().Count; i++)
+            {
+
+            }
+                return true;
+        }
 
     }
 }

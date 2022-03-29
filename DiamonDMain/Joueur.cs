@@ -15,6 +15,8 @@ namespace DiamonDMain
         public string id { get; set; }
         public bool exit { set; get; }
         public Coffre_fort chest { set; get; }
+        public Carte deck { set; get; }
+        public int main { set; get; }
         public int diamands { set; get; }
         public Joueur() { }
         public Joueur(string password, string nom, string id, int port)

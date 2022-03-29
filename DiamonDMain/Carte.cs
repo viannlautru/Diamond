@@ -10,7 +10,7 @@ namespace DiamonDMain
     {
         private string type { get; set; }
         private static int instances = 0;
-
+        public Dictionary<int, Carte> CarteJouer;
         public Carte(string type)
         {
             this.type = type;
@@ -24,12 +24,18 @@ namespace DiamonDMain
         public int GetInstances(){
             return instances;
          }
+      
+        public Dictionary<int, Carte> getCartejouer()
+        {
+            return CarteJouer;
+        }
 
     }
     public class Danger : Carte
     {
         private string name;
         private int quantity;
+                                     
         public Danger(String name = "") : base("Danger"){
             this.name = name;
         }
