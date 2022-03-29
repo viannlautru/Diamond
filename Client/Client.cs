@@ -16,15 +16,13 @@ namespace Client
             {
                 Socket socket = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 socket.Connect(endPoint);
-                byte[] msg = Encoding.ASCII.GetBytes("This is a test<EOF>");
-                int bytesSent = socket.Send(msg);
-                Console.WriteLine("Sent: " + bytesSent + " bytes.");
+                byte[] msg = null; ;
+                int bytesSent = 0;
 
                 //Reçoit le protocole et le désérialise (2)
                 byte[] buffer = new byte[1024];
-                string data = null;
-
                 int length = socket.Receive(buffer);
+                string protocol = Encoding.ASCII.GetString(buffer, 0, length);                
 
                 //Renvoi la réponse du protocole (ProtocolMessageClient) sérialisé (3)
 
@@ -39,7 +37,7 @@ namespace Client
                 bytesSent = socket.Send(msg);
 
                 //Reçoit ID + Port + OK ou KO (6)
-                data += Encoding.ASCII.GetString(buffer, 0, length);
+                string data = Encoding.ASCII.GetString(buffer, 0, length);
                 string ID = data;
 
                 data += Encoding.ASCII.GetString(buffer, 0, length);

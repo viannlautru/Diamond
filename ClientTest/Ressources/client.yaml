@@ -1,0 +1,4 @@
+address: string
+port: int
+password: string
+name: string

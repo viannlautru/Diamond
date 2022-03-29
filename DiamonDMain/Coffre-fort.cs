@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DiamonDMain
 {
-    class Coffre_fort
+    public class Coffre_fort
     {
         private string name;
         private int diamonds;

@@ -8,23 +8,29 @@ namespace DiamonDMain
 {
     public class Joueur
     {
-        private string nom;
-        private bool exit;
-        private Coffre_fort chest;
-
-        private int diamands { set; get; }
-
-        public Joueur(String nom)
+        public string address { get; set; }
+        public int port { get; set; }
+        public string password { get; set; }
+        public string name { get; set; }
+        public string id { get; set; }
+        public bool exit { set; get; }
+        public Coffre_fort chest { set; get; }
+        public int diamands { set; get; }
+        public Joueur() { }
+        public Joueur(string password, string nom, string id, int port)
         {
-            this.nom = nom;
+            this.password = password;
+            this.name = nom;
+            this.id = id;
+            this.port = port;
             diamands = 0;
             this.chest = new Coffre_fort();
         }
+
         void AddDiamond(int val)
         {
             diamands += val;
         }
-        String GetNom() { return this.nom; }
         public void Sortir()    
         {
             //Quand le joueur sort il garde ses diamands dans son coffre
