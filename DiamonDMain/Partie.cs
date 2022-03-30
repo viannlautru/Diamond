@@ -18,7 +18,7 @@ namespace DiamonDMain
         public Grotte laGrotte;
         public Camp leCamp;
         public Joueur joueur;
-        public Dictionary<int, Carte> toueCarte;
+        public Dictionary<int, Carte> ToutelesCarte;
 
         //private Dictionary<int, Grotte> grottes;
 
@@ -50,17 +50,16 @@ namespace DiamonDMain
             //Creation du packet de carte on divise part 4 pour les 4 type de cartes on avoir un bon nombre égale de carte
             //n est la récupération de la quantité de carte dans le dossier config de la partie
             var i = 0;
-            var n = 15;
+            var n = 30;
             while (i < n)
             {
-                if(i<=n/3)
-                    toueCarte.Add(i,new Carte(new Danger().GetPiege()));
-                else if (i <= n / 3 * 2)
-                    toueCarte.Add(i, new Carte(new Danger().GetPiege()));
-                else  
-                    toueCarte.Add(i, new Carte(new Danger().GetPiege()));
+                if(i<=n/2)
+                    ToutelesCarte.Add(i,new Trophee());
+                else if (i <= n / 2 * 2)
+                    ToutelesCarte.Add(i, new Tresor());
                 i++;
             }
+
         }
         public void Fingrotte(){
             for (var i =0; i >= laGrotte.getjoueurGrotte().Count; i++) {
