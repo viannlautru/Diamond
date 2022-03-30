@@ -6,4 +6,15 @@ configurations:
   maxconnexions: 2
   timeout1: 3000
   game1: jeu
-games: []
+games: 
+- id: 1
+  max-players: 4
+  caves: 3
+  cards-quantity: 30
+  traps:
+  - name: caillou
+    quantity: 4
+  - name: lave
+    quantity: 4
+  - name: chauve-souris
+    quantity: 4
