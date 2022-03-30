@@ -26,5 +26,7 @@ namespace DiamonDMain
             thePath = thePath.Replace(@"\bin\Debug\net6.0", "");
             return thePath;
         }
+
+      
     }
 }
