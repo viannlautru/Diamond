@@ -86,12 +86,21 @@ namespace DiamonDMain
         public bool tirageCarte()
         {
             //tirage aléatoire sur la liste toueCarte qui est comme la pioche 
+            var rand = new Random();
             for (var i = 0; i >= leCamp.getjoueurCamp().Count; i++)
             {
-
+                int key = ToutelesCarte.Keys.ElementAt(rand.Next(ToutelesCarte.Count));
+                Carte c = ToutelesCarte[key];
+                if (c.GetType().Name == "Tresor")
+                    Partager((Tresor)c);
+                ToutelesCarte.Remove(key);
             }
                 return true;
         }
-
+        public void Partager(Tresor tresor)
+        {
+            int montant = tresor.GetMontant() / laGrotte.getjoueurGrotte().Count;
+            laGrotte.getjoueurGrotte().All(c => { c.Value.diamands += montant; return true; });
+        }
     }
 }

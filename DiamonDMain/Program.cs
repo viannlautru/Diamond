@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using System.IO;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace DiamonDMain
 {
@@ -23,13 +25,14 @@ namespace DiamonDMain
             }
             return c; 
         }
-          public static string DeserializeGame()
+          public static object DeserializeGame()
         {
-            String path = @"\Server\Ressources\Server.yaml";
+            String path = @"../../../../Server\Ressources\Server.yaml";
+
             var deserializer = new YamlDotNet.Serialization.DeserializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
             .Build();
-            string config = deserializer.Deserialize<string>(File.ReadAllText(path));
+            Object config = deserializer.Deserialize<Object>(File.ReadAllText(path));
 
             return config;
         }
