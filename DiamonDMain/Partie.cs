@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,7 +19,7 @@ namespace DiamonDMain
         public Grotte laGrotte;
         public Camp leCamp;
         public Joueur joueur;
-        public Dictionary<int, Carte> ToutelesCarte;
+        public static Dictionary<int, Carte> ToutelesCarte = new Dictionary<int, Carte>() ;
 
         //private Dictionary<int, Grotte> grottes;
 
@@ -45,7 +46,7 @@ namespace DiamonDMain
             }
         }
 
-        public void CreaCarte()
+        public static void CreaCarte()
         {
             //Creation du packet de carte on divise part 4 pour les 4 type de cartes on avoir un bon nombre égale de carte
             //n est la récupération de la quantité de carte dans le dossier config de la partie
@@ -59,7 +60,7 @@ namespace DiamonDMain
                     ToutelesCarte.Add(i, new Tresor());
                 i++;
             }
-
+            Object lescartepiege = Yaml.DeserializeGame();
         }
         public void Fingrotte(){
             for (var i =0; i >= laGrotte.getjoueurGrotte().Count; i++) {

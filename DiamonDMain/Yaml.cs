@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace DiamonDMain
 {
@@ -26,7 +27,16 @@ namespace DiamonDMain
             thePath = thePath.Replace(@"\bin\Debug\net6.0", "");
             return thePath;
         }
+        public static Object DeserializeGame()
+        {
+            String path = @"../../../../Server\Ressources\Server.yaml";
+            var deserializer = new YamlDotNet.Serialization.DeserializerBuilder()
+            .WithNamingConvention(CamelCaseNamingConvention.Instance)
+            .Build();
+            Dictionary<String, Object> config = deserializer.Deserialize<Dictionary<String, Object>>(File.ReadAllText(path));
+            var a = config.Values.ElementAt(2);
+            return a;
+        }
 
-      
     }
 }
