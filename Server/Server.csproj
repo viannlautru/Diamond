@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ClientTest\ClientTest.csproj" />
     <ProjectReference Include="..\DiamonDMain\DiamonDMain.csproj" />
+    <ProjectReference Include="..\ServerGame\ServerGame.csproj" />
   </ItemGroup>
 
 </Project>

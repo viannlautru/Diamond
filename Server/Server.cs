@@ -48,6 +48,7 @@ namespace Server
         private static Ressources.Config configChoose;
         private static DiamonDMain.ProtocolMessageServer protocolChoose;
         private static Server serverChoose;
+        private static Socket roomCreate;
 
         private static DiamonDMain.Partie game;
 
@@ -55,13 +56,13 @@ namespace Server
         private static byte[] msgOK = Encoding.ASCII.GetBytes("OK");
         private static byte[] msgKO = Encoding.ASCII.GetBytes("KO");
 
-        private static int connexions = 0;
+        private static int connexions;
         private static Dictionary<string, DiamonDMain.Joueur> joueurs = new Dictionary<string, DiamonDMain.Joueur>();
 
         private static DiamonDMain.Joueur player1;
         private static DiamonDMain.Joueur player2;
 
-        private static int roomOpen = -1;
+        private static int roomOpen;
 
 
         public static void Start()
@@ -124,23 +125,14 @@ namespace Server
 
         public static int SendPort(Socket client)
         {
-            //On ouvre un socket pour trouver un port disponible            
-            Socket portSocket = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            IPEndPoint end = new IPEndPoint(ip, 0);
-            portSocket.Bind(end);
-
             byte[] msg;
             int newPort = 0;
 
             if (roomOpen != -1)
-            {
-                portSocket.Dispose();
-                msg = Encoding.ASCII.GetBytes(roomOpen.ToString());
-            }
+                msg = Encoding.ASCII.GetBytes(roomOpen.ToString());            
             else
             {
-                newPort = ((IPEndPoint)portSocket.LocalEndPoint).Port;
-                portSocket.Dispose();
+                newPort = CreatePort();
                 msg = Encoding.ASCII.GetBytes(newPort.ToString());
             }
 
@@ -159,15 +151,29 @@ namespace Server
                 return -1;
         }
 
-        public static Socket CreateRoom(int port)
+        public static int CreatePort()
+        {
+            //On ouvre un socket pour trouver un port disponible            
+            Socket portSocket = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            IPEndPoint end = new IPEndPoint(ip, 0);
+            portSocket.Bind(end);
+
+            int newPort = ((IPEndPoint)portSocket.LocalEndPoint).Port;
+            portSocket.Dispose();
+            return newPort;
+        }
+
+        public static void CreateRoom(int port)
         {
             //on créer un serveur (une salle) qui récupère les joueurs
-            IPEndPoint newEndPoint = new IPEndPoint(ip, port);
-            Socket room = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            ServerGame.Room.StartServer(port, serverChoose.maxconnexions);
 
-            room.Bind(newEndPoint);
-            room.Listen(serverChoose.maxconnexions);
-            return room;
+            //IPEndPoint newEndPoint = new IPEndPoint(ip, port);
+            //roomCreate = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+            //roomCreate.Bind(newEndPoint);
+            //roomCreate.Listen(serverChoose.maxconnexions);
+            connexions++;
         }
 
         public static bool SendWork(byte[] msg, Socket client)
@@ -203,11 +209,14 @@ namespace Server
             if (connexions == serverChoose.maxconnexions)
             {
                 connexions = 0;
-                StartGame();
+                
+            }
+            if (connexions == serverChoose.maxconnexions || connexions == 0)
+            {
+                roomOpen = -1;
             }
 
-            byte[] buffer = new byte[1024];
-            string data = null;           
+            byte[] buffer = new byte[1024];      
 
             byte[] msg = null;
             int bytesSent = 0;
@@ -221,21 +230,21 @@ namespace Server
             //Reçoit réponse protocol + name + password à désérialiser (4)
             //Reçoit protocol
             int length = client.Receive(buffer);
-            string yaml = Encoding.ASCII.GetString(buffer, 0, length);
-            DiamonDMain.ProtocolMessageClient protocolClient = new();
-            protocolClient = DeserializeProtocolClient(yaml);
+            string data = Encoding.ASCII.GetString(buffer, 0, length);
+            DiamonDMain.ProtocolMessageClient protocolClient;
+            protocolClient = DeserializeProtocolClient(data);
 
             //Reçoit name
-            length = client.Receive(buffer);
-            string nameClient = Encoding.ASCII.GetString(buffer, 0, length);
+            string name = Get(client);
+
+            //Sépare deux envois du client trop rapides
+            SendOKorKO(1, client);
 
             //Reçoit password
-            length = client.Receive(buffer);
-            string passwordClient = Encoding.ASCII.GetString(buffer, 0, length);
-            
+            string pwdClient = Get(client);
 
             //Vérifier name et password
-            if (serverChoose.password == passwordClient)
+            if (serverChoose.password == pwdClient)
             {
                 //Envoi ID (5)                
                 bool envoiID = SendID(client);
@@ -248,28 +257,20 @@ namespace Server
                     client.Close();
 
                 //Envoi OK ou KO si connexion accepté(5) et créer la room
-                if (envoiProtocol && envoiID && roomPort != -1)
+                if (envoiProtocol && envoiID)
                 {
+                    SendOKorKO(1, client);
+
+
+                    //Créer salle et attend tous les joueurs
+
+                    CreateRoom(roomPort);
+
+
                     SendOKorKO(1, client);
                     client.Close();
 
-                    //Créer salle et attend tous les joueurs
-                    if (connexions == 0 || connexions == serverChoose.maxconnexions)
-                    {                        
-                        var thread = new Thread(() =>
-                        {
-                            Socket roomCreate = CreateRoom(roomPort);
-                            while (serverChoose.maxconnexions != connexions)
-                            {
-                                client = roomCreate.Accept();
-                                connexions++;
-                            }
-                        });
-                        thread.Start();
-
-                    }
-
-                    ReceiveIdPassword(client);
+                    //ReceiveIdPassword(client);
                 }
                 else
                 {
@@ -284,10 +285,15 @@ namespace Server
             //listener.Dispose();
         }
 
-        public static void StartGame()
+        public static string Get(Socket client)
         {
-
+            byte[] buffer = new byte[1024];
+            int length = client.Receive(buffer);
+            string data = Encoding.ASCII.GetString(buffer, 0, length);
+            return data;
         }
+
+
 
         public static void CreatePlayer(string passwordClient, string playerID)
         {

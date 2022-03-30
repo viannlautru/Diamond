@@ -36,17 +36,21 @@ namespace ClientTest
                 SendProtocol(socket);
 
                 //Envoi name (3)
-                byte[] name = Encoding.ASCII.GetBytes(parser.name);
-                bytesSent = socket.Send(name);
+                SendName(socket);
 
-                //Envoi password (3)
-                byte[] pwd = Encoding.ASCII.GetBytes(parser.password);
-                bytesSent = socket.Send(pwd);
-
+                //Reçoit OK du server
                 byte[] buffer = new byte[1024];
-                //Reçoit ID + Port + OK ou KO (6)
                 int length = socket.Receive(buffer);
                 string data = Encoding.ASCII.GetString(buffer, 0, length);
+                CheckKO(data, socket);
+
+                //Envoi password (3)
+                SendPwd(socket);
+
+                
+                //Reçoit ID + Port + OK ou KO (6)
+                length = socket.Receive(buffer);
+                data = Encoding.ASCII.GetString(buffer, 0, length);
                 CheckKO(data, socket);
                 string ID = data;
 
@@ -62,36 +66,15 @@ namespace ClientTest
 
                 if (OK == "OK")
                 {
+                    length = socket.Receive(buffer);
+                    data = Encoding.ASCII.GetString(buffer, 0, length);
+                    CheckKO(data, socket);
+                    string test = data;
                     //Client se déconnecte du serveur et se connecte à la salle (7)
 
-                        Socket room = RoomConnect(port);
+                    Socket room = RoomConnect(port);
 
-                        //Envoi ID (7)
-                        byte[] msg = Encoding.ASCII.GetBytes(ID);
-                        bytesSent = room.Send(msg);
-
-                        //Envoi password (7)
-                        if (parser.password == null)
-                            Stop(room);
-                        else
-                        {
-                            msg = Encoding.ASCII.GetBytes(parser.password);
-                            bytesSent = room.Send(msg);
-                        }
-
-                        //Reçoit confirmation (10)
-                        length = room.Receive(buffer);
-                        data = Encoding.ASCII.GetString(buffer, 0, length);
-                        CheckKO(data, room);
-                        OK = data;
-
-                        if (OK == "KO")
-                            Stop(room);
-                        //Lance jeu
-                        else
-                        {
-
-                        }
+                    
 
                 }
                 //Déconnexion
@@ -104,6 +87,36 @@ namespace ClientTest
             {
                 Console.WriteLine("Unexpected exception : {0}", e.ToString());
             }
+        }
+
+        public void SendDataToRoom(Socket room)
+        {
+            ////Envoi ID (7)
+            //byte[] msg = Encoding.ASCII.GetBytes(ID);
+            //bytesSent = room.Send(msg);
+
+            ////Envoi password (7)
+            //if (parser.password == null)
+            //    Stop(room);
+            //else
+            //{
+            //    msg = Encoding.ASCII.GetBytes(parser.password);
+            //    bytesSent = room.Send(msg);
+            //}
+
+            ////Reçoit confirmation (10)
+            //length = room.Receive(buffer);
+            //data = Encoding.ASCII.GetString(buffer, 0, length);
+            //CheckKO(data, room);
+            //OK = data;
+
+            //if (OK == "KO")
+            //    Stop(room);
+            ////Lance jeu
+            //else
+            //{
+
+            //}
         }
 
         public void GetConfig()
@@ -166,6 +179,18 @@ namespace ClientTest
             string yaml = DiamonDMain.Yaml.Serialize(protocolClient);
             byte[] theMsg = Encoding.ASCII.GetBytes(yaml);
             bytesSent = socket.Send(theMsg);
+        }
+
+        public void SendName(Socket socket)
+        {
+            byte[] name = Encoding.ASCII.GetBytes(parser.name);
+            bytesSent = socket.Send(name);
+        }
+
+        public void SendPwd(Socket socket)
+        {
+            byte[] pwd = Encoding.ASCII.GetBytes(parser.password);
+            bytesSent = socket.Send(pwd);
         }
 
         public void CheckKO(string msg, Socket socket)
