@@ -11,6 +11,7 @@ namespace DiamonDMain
     {
         public int version { get; set; }   
         
+        public ProtocolMessage() { }
         public ProtocolMessage(int laVersion) { this.version = laVersion; }
     }
     
@@ -33,7 +34,9 @@ namespace DiamonDMain
         public List<string> encryption { get; set; }
         public List<string> compression { get; set; }
 
+        public ProtocolMessageServer() : base() { }
         public ProtocolMessageServer(int LaVersion) : base(LaVersion) {  }
+
         //public ProtocolMessageServer(int laVersion, List<string> LeEncryption, List<string> LaCompression) : base(laVersion)
         //{
         //    this.encryption = LeEncryption;
