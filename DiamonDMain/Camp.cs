@@ -18,13 +18,13 @@ namespace DiamonDMain
        
         public int addCampUtilisateur(int joueur)
         {
-            foreach (var p in laGrotte.Joueurgrotte)
+            if (laGrotte.Joueurgrotte.ContainsKey(joueur))
             {
-                if (p.Key == joueur)
-                    JoueurCamp.Add(joueur, p.Value);
+                JoueurCamp.Add(joueur, laGrotte.Joueurgrotte[joueur]);
             }
             laGrotte.Joueurgrotte.Remove(joueur);
             return joueur;
         }
+        public Grotte GetGrotte() { return laGrotte; }
     }
 }

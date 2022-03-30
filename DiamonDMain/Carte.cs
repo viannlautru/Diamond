@@ -65,6 +65,7 @@ namespace DiamonDMain
             var rand = new Random();
             montantTresor = rand.Next(1000);
         }
+        public int GetMontant() { return montantTresor; }
         public int Partager()
         {
             return (montantTresor - montantTresor% GetInstances())/GetInstances();

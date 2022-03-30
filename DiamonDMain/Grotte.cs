@@ -34,9 +34,9 @@ namespace DiamonDMain
         }
         public int addGrotteUtilisateur(int joueur)
         {
-            foreach (var p in leCamp.JoueurCamp) {
-                if(p.Key == joueur)
-                    Joueurgrotte.Add(joueur,p.Value);
+            if (leCamp.JoueurCamp.ContainsKey(joueur))
+            {
+                Joueurgrotte.Add(joueur, leCamp.JoueurCamp[joueur]);
             }
             leCamp.JoueurCamp.Remove(joueur);
             return joueur;
