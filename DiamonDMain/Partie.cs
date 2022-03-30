@@ -89,11 +89,11 @@ namespace DiamonDMain
             var rand = new Random();
             for (var i = 0; i >= leCamp.getjoueurCamp().Count; i++)
             {
-                int key = toueCarte.Keys.ElementAt(rand.Next(toueCarte.Count));
-                Carte c = toueCarte[key];
+                int key = ToutelesCarte.Keys.ElementAt(rand.Next(ToutelesCarte.Count));
+                Carte c = ToutelesCarte[key];
                 if (c.GetType().Name == "Tresor")
                     Partager((Tresor)c);
-                toueCarte.Remove(key);
+                ToutelesCarte.Remove(key);
             }
                 return true;
         }
