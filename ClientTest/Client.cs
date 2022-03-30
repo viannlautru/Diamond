@@ -1,68 +1,51 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.CodeDom.Compiler;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace ClientTest
 {
     class Client
     {
+        public static ClientParser parser = new();
+        public static IPAddress ip;
+        public static IPEndPoint endPoint;
+        public static DiamonDMain.ProtocolMessageServer protocol;
+
+        public int bytesSent = 0;
         public void Connect()
         {
-            IPAddress ip = new IPAddress(new byte[] { 127, 0, 0, 1 });
-            IPEndPoint endPoint = new IPEndPoint(ip, 1234);            
+            //On obtient config du client
+            GetConfig();
+         
             try
-            {
+            {                
                 Socket socket = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 socket.Connect(endPoint);
-                int bytesSent = 0;
-
-                //Reçoit le protocole et le désérialise (2)
-                byte[] buffer = new byte[1024 * 4];
-                int length = socket.Receive(buffer);
-                string json = Encoding.ASCII.GetString(buffer, 0, length);
-                CheckKO(json, socket);
-
-                DiamonDMain.ProtocolMessageClient? protocol = null;
-                if (json != null)
-                     protocol = JsonConvert.DeserializeObject<DiamonDMain.ProtocolMessageClient>(json);
-
-                Console.WriteLine("Version ?");
-                int? version;
-                version = Int32.TryParse(Console.ReadLine(), out var res) ? res : (int?)null;
-                //Renvoi la réponse du protocole (ProtocolMessageClient) sérialisé (3)
-                if (version != null)
-                {
-                    int v = (int)version;
-                    DiamonDMain.ProtocolMessageClient protocolClient = new(v);
-                    json = JsonConvert.SerializeObject(protocolClient);
-                    byte[] theMsg = Encoding.ASCII.GetBytes(json);
-                    bytesSent = socket.Send(theMsg);
-                }
                 
 
-                //Demande infos du serveur au client
-                Console.WriteLine("Nom serveur :");
-                string? name = Console.ReadLine();
-                Console.WriteLine("Mdp serveur :");
-                string? password = Console.ReadLine();
+                //Reçoit le protocole et le désérialise (2)
+                GetProtocol(socket);
 
-                if (name != null && password != null)
-                {
-                    //Envoi name (3)
-                    byte[] msg = Encoding.ASCII.GetBytes(name);
-                    bytesSent = socket.Send(msg);
+                //Renvoi la réponse du protocole (3)
+                SendProtocol(socket);
 
-                    //Envoi password (3)
-                    msg = Encoding.ASCII.GetBytes(password);
-                    bytesSent = socket.Send(msg);
-                }
+                //Envoi name (3)
+                byte[] name = Encoding.ASCII.GetBytes(parser.name);
+                bytesSent = socket.Send(name);
 
+                //Envoi password (3)
+                byte[] pwd = Encoding.ASCII.GetBytes(parser.password);
+                bytesSent = socket.Send(pwd);
+
+                byte[] buffer = new byte[1024];
                 //Reçoit ID + Port + OK ou KO (6)
-                length = socket.Receive(buffer);
+                int length = socket.Receive(buffer);
                 string data = Encoding.ASCII.GetString(buffer, 0, length);
                 CheckKO(data, socket);
                 string ID = data;
@@ -79,12 +62,8 @@ namespace ClientTest
 
                 if (OK == "OK")
                 {
-                    //On se déconnecte du premier server
-                    //socket.Close();
+                    //Client se déconnecte du serveur et se connecte à la salle (7)
 
-                    //Client se connecte à la salle (7)
-                    var thread = new Thread(() =>
-                    {
                         Socket room = RoomConnect(port);
 
                         //Envoi ID (7)
@@ -92,11 +71,11 @@ namespace ClientTest
                         bytesSent = room.Send(msg);
 
                         //Envoi password (7)
-                        if (password == null)
+                        if (parser.password == null)
                             Stop(room);
                         else
                         {
-                            msg = Encoding.ASCII.GetBytes(password);
+                            msg = Encoding.ASCII.GetBytes(parser.password);
                             bytesSent = room.Send(msg);
                         }
 
@@ -113,8 +92,7 @@ namespace ClientTest
                         {
 
                         }
-                    });
-                    thread.Start();
+
                 }
                 //Déconnexion
                 else
@@ -126,6 +104,68 @@ namespace ClientTest
             {
                 Console.WriteLine("Unexpected exception : {0}", e.ToString());
             }
+        }
+
+        public void GetConfig()
+        {
+            Console.WriteLine("Choisir une config :");
+            string pathDirectory = Path.GetFullPath("Ressources");
+            pathDirectory = pathDirectory.Replace(@"\bin\Debug\net6.0", "");
+            string[] files = Directory.GetFileSystemEntries(pathDirectory);
+            string resp = "";
+            foreach (string file in files)
+            {
+                if (file.IndexOf(".yaml") != -1)
+                {
+                    string newFile = file.Replace(".yaml", "");
+                    resp += newFile.Substring(file.IndexOf(@"\Ressources\") + 12) + "   ";
+                }
+
+            }
+            Console.WriteLine(resp);
+            string? path = null;
+            while (path == null) { path = Console.ReadLine(); }
+            path = DiamonDMain.Yaml.GetPath(path);
+
+            parser = DeserializePathParser(path);
+            ip = new IPAddress(parser.address);
+            endPoint = new IPEndPoint(ip, parser.port);
+        }
+
+        public void GetProtocol(Socket socket)
+        {
+            byte[] buffer = new byte[1024 * 4];
+            int length = socket.Receive(buffer);
+            string yaml = Encoding.ASCII.GetString(buffer, 0, length);
+            CheckKO(yaml, socket);
+
+            if (yaml != null)
+                protocol = DeserializeProtocol(yaml);
+        }
+
+        public void SendProtocol(Socket socket)
+        {
+            int version = protocol.version;
+            DiamonDMain.ProtocolMessageClient protocolClient = new();
+            if (version == 1)
+                protocolClient = new(protocol.version, "", "");
+            //A refaire plus tard lors d'une évolution avec le protocole
+            else
+            {
+                Console.WriteLine("Version ?");
+                int? vers;
+                vers = Int32.TryParse(Console.ReadLine(), out var res) ? res : (int?)null;
+
+                if (vers != null)
+                {
+                    int v = (int)version;
+                    protocolClient = new(v);
+                }
+            }
+
+            string yaml = DiamonDMain.Yaml.Serialize(protocolClient);
+            byte[] theMsg = Encoding.ASCII.GetBytes(yaml);
+            bytesSent = socket.Send(theMsg);
         }
 
         public void CheckKO(string msg, Socket socket)
@@ -153,6 +193,26 @@ namespace ClientTest
             room.Connect(newEndPoint);
             Console.WriteLine("Vous êtes dans une salle.");
             return room;
+        }        
+
+        public ClientParser DeserializePathParser(string path)
+        {
+            var deserializer = new DeserializerBuilder()
+            .WithNamingConvention(CamelCaseNamingConvention.Instance)
+            .Build();
+            var config = deserializer.Deserialize<ClientParser>(File.ReadAllText(path));
+
+            return config;
+        }
+
+        public DiamonDMain.ProtocolMessageServer DeserializeProtocol(string yaml)
+        {
+            var deserializer = new DeserializerBuilder()
+            .WithNamingConvention(CamelCaseNamingConvention.Instance)
+            .Build();
+            var config = deserializer.Deserialize<DiamonDMain.ProtocolMessageServer>(yaml);
+
+            return config;
         }
     }
 }

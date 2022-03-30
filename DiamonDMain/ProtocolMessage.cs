@@ -20,13 +20,13 @@ namespace DiamonDMain
         public string encryption { get; set; }
         public string compression { get; set; }
 
-        [JsonConstructor]
+        public ProtocolMessageClient() : base() { }
         public ProtocolMessageClient(int LaVersion) : base(LaVersion) { }
-        //public ProtocolMessageClient(int laVersion, string leEncryption, string laCompression) : base(laVersion)
-        //{
-        //    this.encryption = leEncryption; 
-        //    this.compression = laCompression;
-        //}
+        public ProtocolMessageClient(int laVersion, string leEncryption, string laCompression) : base(laVersion)
+        {
+            this.encryption = leEncryption;
+            this.compression = laCompression;
+        }
     }
 
     public class ProtocolMessageServer : ProtocolMessage

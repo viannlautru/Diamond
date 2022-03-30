@@ -19,19 +19,36 @@ namespace Server
 {
     public class Server
     {
+
+        //Object Server
+        public string name1 { get; set; }
+        public int port { get; set; }
+        public string password { get; set; }
+        public int maxconnexions { get; set; }
+        public int timeout1 { get; set; }
+        public string game1 { get; set; }
+
+        public Server() { }
+        public Server(string name, int port, string pwd, int max, int timeout, string game)
+        {
+            this.name1 = name;
+            this.port = port;
+            this.password = pwd;
+            this.maxconnexions = max;
+            this.timeout1 = timeout;
+            this.game1 = game;
+        }
+        //
+
         private static string templateYaml = @"address: string         port: int       password: string        name: string";
-        private static IPAddress ip;
+        private static IPAddress ip = new IPAddress(new byte[] { 127, 0, 0, 1 });
         private static IPEndPoint endPoint;
         private static Socket listener;
         private static int version = 1;
         private static Ressources.Config configChoose;
         private static DiamonDMain.ProtocolMessageServer protocolChoose;
+        private static Server serverChoose;
 
-        private static string name = "Diamond";
-        private static int port = 1234;
-        private static string password = "123";
-        private static int max_connexions = 2; //5 à mettre pour V1
-        private static int timeout = 5000;
         private static DiamonDMain.Partie game;
 
         //Variables globales
@@ -45,33 +62,14 @@ namespace Server
         private static DiamonDMain.Joueur player2;
 
         private static int roomOpen = -1;
-        private static Socket roomCreate;
+
 
         public static void Start()
         {
-            //Récupère configuration du server
-            Console.WriteLine("Choisir une configuration :");
-            Console.WriteLine("Server, ...");
-            string configName = Console.ReadLine();
-
-            string longPath = GetPath(configName);
-            configChoose = DeserializeConfig(longPath);
-
-            //Récupère protocol
-            Console.WriteLine("Choisir le protocol :");
-            Console.WriteLine("1");
-            string protocolName = Console.ReadLine();
-            if (protocolName == "1")
-                longPath = GetPath("Protocol1");
-            else
-                longPath = GetPath(protocolName);
-            protocolChoose = DeserializeProtocol(longPath);
-
-            string test = Serialize(protocolChoose);
-
-
-            ip = new IPAddress(new byte[] { 127, 0, 0, 1 });
-            endPoint = new IPEndPoint(ip, port);
+            GetConfig();
+            GetProtocol();            
+            
+            endPoint = new IPEndPoint(ip, serverChoose.port);
             listener = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             listener.Bind(endPoint);
@@ -94,20 +92,13 @@ namespace Server
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
-
             }
         }
         
         public static bool SendProtocol(Socket client)
         {
-
-
-
-            DiamonDMain.ProtocolMessageServer protocol = new(version);
-            //Convertir le protocol
-            string json = JsonConvert.SerializeObject(protocol, Formatting.Indented);
-            //
-            byte[] msg = Encoding.ASCII.GetBytes(json);
+            string yaml = DiamonDMain.Yaml.Serialize(protocolChoose);
+            byte[] msg = Encoding.ASCII.GetBytes(yaml);
 
             bool send = SendWork(msg, client);
             return send;
@@ -170,13 +161,12 @@ namespace Server
 
         public static Socket CreateRoom(int port)
         {
-            IPAddress ip = new IPAddress(new byte[] { 127, 0, 0, 1 });
             //on créer un serveur (une salle) qui récupère les joueurs
             IPEndPoint newEndPoint = new IPEndPoint(ip, port);
             Socket room = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             room.Bind(newEndPoint);
-            room.Listen(max_connexions);
+            room.Listen(serverChoose.maxconnexions);
             return room;
         }
 
@@ -197,7 +187,7 @@ namespace Server
             }                           
         }
 
-        public static void SenOKorKO(int i, Socket client)
+        public static void SendOKorKO(int i, Socket client)
         {
             if (i == 1)
                 client.Send(msgOK);
@@ -210,7 +200,7 @@ namespace Server
 
         public static void ConnectClient(Socket client)
         {
-            if (connexions == max_connexions)
+            if (connexions == serverChoose.maxconnexions)
             {
                 connexions = 0;
                 StartGame();
@@ -231,22 +221,21 @@ namespace Server
             //Reçoit réponse protocol + name + password à désérialiser (4)
             //Reçoit protocol
             int length = client.Receive(buffer);
-            string json = Encoding.ASCII.GetString(buffer, 0, length);
-            DiamonDMain.ProtocolMessageServer protocol = null;
-            protocol = JsonConvert.DeserializeObject<DiamonDMain.ProtocolMessageServer>(json);
+            string yaml = Encoding.ASCII.GetString(buffer, 0, length);
+            DiamonDMain.ProtocolMessageClient protocolClient = new();
+            protocolClient = DeserializeProtocolClient(yaml);
 
             //Reçoit name
             length = client.Receive(buffer);
-            data = Encoding.ASCII.GetString(buffer, 0, length);
-            string nameClient = data;
+            string nameClient = Encoding.ASCII.GetString(buffer, 0, length);
 
             //Reçoit password
             length = client.Receive(buffer);
-            data = Encoding.ASCII.GetString(buffer, 0, length);
-            string passwordClient = data;
+            string passwordClient = Encoding.ASCII.GetString(buffer, 0, length);
+            
 
             //Vérifier name et password
-            if (name == nameClient && password == passwordClient)
+            if (serverChoose.password == passwordClient)
             {
                 //Envoi ID (5)                
                 bool envoiID = SendID(client);
@@ -261,26 +250,35 @@ namespace Server
                 //Envoi OK ou KO si connexion accepté(5) et créer la room
                 if (envoiProtocol && envoiID && roomPort != -1)
                 {
-                    SenOKorKO(1, client);
+                    SendOKorKO(1, client);
+                    client.Close();
+
                     //Créer salle et attend tous les joueurs
-                    if (connexions == 0 || connexions == max_connexions)
-                    {
-                        client.Close();
-                        roomCreate = CreateRoom(roomPort);
+                    if (connexions == 0 || connexions == serverChoose.maxconnexions)
+                    {                        
+                        var thread = new Thread(() =>
+                        {
+                            Socket roomCreate = CreateRoom(roomPort);
+                            while (serverChoose.maxconnexions != connexions)
+                            {
+                                client = roomCreate.Accept();
+                                connexions++;
+                            }
+                        });
+                        thread.Start();
 
                     }
-                    client = roomCreate.Accept();
-                    connexions++;
+
                     ReceiveIdPassword(client);
                 }
                 else
                 {
-                    SenOKorKO(0, client);
+                    SendOKorKO(0, client);
                 }
             }
             else
             {
-                SenOKorKO(0, client);
+                SendOKorKO(0, client);
             }
 
             //listener.Dispose();
@@ -296,13 +294,13 @@ namespace Server
             if (connexions == 1)
             {
                 player1 = new DiamonDMain.Joueur(passwordClient, ClientTest.Ressources.Player1.GetName(),
-                    playerID, port);
+                    playerID, serverChoose.port);
                 joueurs.Add(playerID, player1);
             }
             if (connexions == 2)
             {
                 player2 = new DiamonDMain.Joueur(passwordClient, ClientTest.Ressources.Player2.GetName(),
-                    playerID, port);
+                    playerID, serverChoose.port);
                 joueurs.Add(playerID, player2);
             }
         }
@@ -329,14 +327,14 @@ namespace Server
             string passwordClient = data;
 
             //Envoi OK (9)
-            if (password == passwordClient)
+            if (serverChoose.password == passwordClient)
             {
-                SenOKorKO(1, clientConnect);
+                SendOKorKO(1, clientConnect);
                 CreatePlayer(passwordClient, playerID);
             }
             else
             {
-                SenOKorKO(0, clientConnect);
+                SendOKorKO(0, clientConnect);
             }
         }
 
@@ -385,26 +383,67 @@ namespace Server
             return config;
         }
 
-        public static string Serialize(object o)
+        public static DiamonDMain.ProtocolMessageClient DeserializeProtocolClient(string yaml)
         {
-            var stringBuilder = new StringBuilder();
-            var serializer = new Serializer();
-            serializer.Serialize(new IndentedTextWriter(new StringWriter(stringBuilder)), o);
-            return stringBuilder.ToString();
+            var deserializer = new DeserializerBuilder()
+            .WithNamingConvention(CamelCaseNamingConvention.Instance)
+            .Build();
+            var config = deserializer.Deserialize<DiamonDMain.ProtocolMessageClient>(yaml);
+
+            return config;
         }
 
-        public static string GetPath(string name)
+        public static void GetConfig()
         {
-            string fileName = @"Ressources\" + name + ".yaml";
-            string thePath = Path.GetFullPath(fileName);
-            thePath = thePath.Replace(@"\bin\Debug\net6.0", "");
-            return thePath;
+            //Récupère configuration du server
+            string longPath = DiamonDMain.Yaml.GetPath("Server");
+            configChoose = DeserializeConfig(longPath);
+
+            string serverNames = "";
+            foreach (Server serv in configChoose.configurations)
+            {
+                serverNames += serv.name1 + "   ";
+            }
+
+            Console.WriteLine("Choisir un server :");
+            Console.WriteLine(serverNames);
+            string configName = Console.ReadLine();
+
+            foreach (Server serv in configChoose.configurations)
+            {
+                if (configName == serv.name1)
+                    serverChoose = serv;
+            }
+        }
+
+        public static void GetProtocol()
+        {
+            //Récupère protocol
+            Console.WriteLine("Choisir le protocol :");
+            Console.WriteLine("1");
+            string protocolName = Console.ReadLine();
+            string longPath = "";
+
+            if (protocolName == "1")
+                longPath = DiamonDMain.Yaml.GetPath("Protocol1");
+            else
+                longPath = DiamonDMain.Yaml.GetPath(protocolName);
+            protocolChoose = DeserializeProtocol(longPath);
         }
 
         static void Main(string[] args)
         {            
             Start();
             Console.ReadLine();
+        }
+
+        public void Test()
+        {
+            Server s = new Server("Diamond", 1234, "123", 2, 3000, "jeu");
+            List<Server> servers = new List<Server>();
+            servers.Add(s);
+            Ressources.Config c = new("conf", servers);
+            string serv = DiamonDMain.Yaml.Serialize(c);
         }
     }
 }

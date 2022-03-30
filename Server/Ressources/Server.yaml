@@ -1,3 +1,9 @@
-name: "Diamond"
-configurations: []
+name: conf
+configurations:
+- name1: Diamond
+  port: 1234
+  password: 123
+  maxconnexions: 2
+  timeout1: 3000
+  game1: jeu
 games: []

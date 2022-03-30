@@ -1,4 +1,4 @@
-address: string
-port: int
-password: string
-name: string
+address: [127, 0, 0, 1]
+port: 1234
+password: "123"
+name: "Diamond"
