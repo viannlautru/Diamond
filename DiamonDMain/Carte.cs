@@ -27,7 +27,6 @@ namespace DiamonDMain
     public class Danger : Carte
     {
         private string name;
-        private int quantity;
                                      
         public Danger(String name = "") : base("Danger"){
             this.name = name;
@@ -39,11 +38,8 @@ namespace DiamonDMain
     }
     public class Trophee : Carte
     {
-        private int montantTrophe = 0;
         public Trophee() : base("Trophee")
         {
-            var rand = new Random();
-            montantTrophe = rand.Next(1000);
         }
         public Trophee GetTrophee()
         {
@@ -56,12 +52,14 @@ namespace DiamonDMain
         public Tresor() : base("Tresor")
         {
             var rand = new Random();
-            montantTresor = rand.Next(1000);
+            montantTresor = rand.Next(10);
         }
         public int GetMontant() { return montantTresor; }
-        public int Partager()
+        public int Partager(int nbJoueurs)
         {
-            return (montantTresor - montantTresor% GetInstances())/GetInstances();
+            int mont = (montantTresor - montantTresor % nbJoueurs) / nbJoueurs;
+            montantTresor -= mont;
+            return mont;
         }
     }
 }
