@@ -23,7 +23,7 @@ namespace ServerGame
         public static Dictionary<string, Socket> sockets = new();
         public static Dictionary<string, DiamonDMain.Joueur> joueurs = new Dictionary<string, DiamonDMain.Joueur>();
 
-        public static async Task<Socket> StartServer(IPEndPoint endPoint, int max, string pwd)
+        public static async Task<Socket> StartServer(IPEndPoint endPoint, int max, string pwd, int timeout)
         {
             newEndPoint = endPoint;
             password = pwd;
@@ -36,7 +36,9 @@ namespace ServerGame
 
                     //on créer un serveur (une salle) qui récupère les joueurs
                     room  = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                    
+                    room.ExclusiveAddressUse = true;
+                    room.ReceiveTimeout = timeout;
+                    room.SendTimeout = timeout;
                     room.Bind(newEndPoint);
                     room.Listen(maxconnexions + 1);
                 });
@@ -82,16 +84,10 @@ namespace ServerGame
                         Socket model = sockets[key];
                         int lePort = int.Parse(key.Substring(0, 5));
                         if (port == lePort)
-                        {
-                            bool envoiPlay = SendPlay(model);
-                            if (!envoiPlay)
-                                model.Close();
-                        }
+                            SendPlay(model);
 
                         //Envoi instructions
-                        bool envoi = SendInstructions(model);
-                        if (!envoi)
-                            model.Close();
+                        SendInstructions(model);
 
                         //Envoi OK
                         SendOKorKO(1, model);
@@ -122,41 +118,48 @@ namespace ServerGame
 
         public static void SendOKorKO(int i, Socket socket)
         {
-            if (i == 1)
-                socket.Send(Encoding.ASCII.GetBytes("OK"));
-            else
+            try
             {
-                socket.Send(Encoding.ASCII.GetBytes("KO"));
-                socket.Close();
+                if (i == 1)
+                    socket.Send(Encoding.ASCII.GetBytes("OK"));
+                else
+                {
+                    socket.Send(Encoding.ASCII.GetBytes("KO"));
+                    socket.Close();
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
 
-        public static bool SendWork(byte[] msg, Socket client)
+        public static void SendWork(byte[] msg, Socket client)
         {
-            int bytesSent;
-            if (msg == null)
+            if (client.Connected)
             {
-                bytesSent = client.Send(Encoding.ASCII.GetBytes("KO"));
-                return false;
-            }
-            else
-            {
-                bytesSent = client.Send(msg);
-                if (msg != null || bytesSent != 0)
-                    return true;
-                return false;
+                try
+                {
+                    int bytesSent;
+                    if (msg == null)
+                        bytesSent = client.Send(Encoding.ASCII.GetBytes("KO"));
+                    else
+                        bytesSent = client.Send(msg);
+                }
+                catch(Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
             }
         }
 
-        public static bool SendPlay(Socket client)
+        public static void SendPlay(Socket client)
         {
             byte[] msg = Encoding.ASCII.GetBytes("La partie va commencer");
-
-            bool send = SendWork(msg, client);
-            return send;
+            SendWork(msg, client);
         }
 
-        public static bool SendInstructions(Socket client)
+        public static void SendInstructions(Socket client)
         {
             string instructions = @" => Règles du jeu : 4 cartes 
                     - Cartes Trésor : un nombre de diamants aléatoire est à partager équitablement entre les joueurs 
@@ -180,8 +183,7 @@ namespace ServerGame
 
             byte[] msg = Encoding.UTF8.GetBytes(instructions);
 
-            bool send = SendWork(msg, client);
-            return send;
+            SendWork(msg, client);
         }
     }
 }

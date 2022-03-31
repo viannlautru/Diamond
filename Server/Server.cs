@@ -22,26 +22,26 @@ namespace Server
     {
 
         //Object Server
-        public string name1 { get; set; }
+        public string name { get; set; }
         public int port { get; set; }
         public string password { get; set; }
         public int maxconnexions { get; set; }
-        public int timeout1 { get; set; }
+        public int timeout { get; set; }
         public string game1 { get; set; }
 
         public Server() { }
         public Server(string name, int port, string pwd, int max, int timeout, string game)
         {
-            this.name1 = name;
+            this.name = name;
             this.port = port;
             this.password = pwd;
             this.maxconnexions = max;
-            this.timeout1 = timeout;
+            this.timeout = timeout;
             this.game1 = game;
         }
         //
 
-        private static string templateYaml = @"address: string         port: int       password: string        name: string";
+        
         private static IPAddress ip = new IPAddress(new byte[] { 127, 0, 0, 1 });
         private static IPEndPoint endPoint;
         private static Socket listener;
@@ -71,7 +71,8 @@ namespace Server
             
             endPoint = new IPEndPoint(ip, serverChoose.port);
             listener = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
+            listener.ReceiveTimeout = serverChoose.timeout;
+            listener.SendTimeout = serverChoose.timeout;
             listener.Bind(endPoint);
             listener.Listen(6);
             try
@@ -94,7 +95,116 @@ namespace Server
                 Console.WriteLine(e.ToString());
             }
         }
-        
+
+        public static void ConnectClient(Socket client)
+        {
+            if (connexions == serverChoose.maxconnexions)
+                connexions = 0;
+            if (connexions == serverChoose.maxconnexions || connexions == 0)
+                roomOpen = -1;
+
+            byte[] buffer = new byte[1024];
+
+            //Envoi du protocol à sérialiser (1)             
+            bool envoiProtocol = SendProtocol(client);
+            if (!envoiProtocol)
+                client.Disconnect(true);
+
+            //Reçoit réponse protocol + name + password à désérialiser (4)
+            //Reçoit protocol
+            int length = client.Receive(buffer);
+            string data = Encoding.ASCII.GetString(buffer, 0, length);
+            DiamonDMain.ProtocolMessageClient protocolClient;
+            protocolClient = DeserializeProtocolClient(data);
+
+            //Reçoit name
+            string namePlayer = Get(client);
+
+            //Sépare deux envois du client trop rapides
+            SendOKorKO(1, client);
+
+            //Reçoit password
+            string pwdClient = Get(client);
+
+            //Vérifier password et version
+            if (serverChoose.password == pwdClient)
+            {
+                switch (protocolClient.version)
+                {
+                    case 1:
+                        StartV1(client, namePlayer);
+                        break;
+                    default:
+                        StartV1(client, namePlayer);
+                        break;
+                }
+            }
+            else
+                SendOKorKO(0, client);
+            //listener.Dispose(); Fin du server
+        }
+
+        public static void StartV1(Socket client, string namePlayer)
+        {
+            if (client.Connected)
+            {
+                try
+                {
+                    //Envoi ID (5)                
+                    string envoiID = SendID(client);
+                    if (envoiID == "")
+                        client.Disconnect(true);
+
+                    string OK = Get(client);
+
+                    //Envoi port (5)
+                    int roomPort = SendPort(client);
+                    if (roomPort == -1)
+                        client.Disconnect(true);
+
+                    OK = Get(client);
+
+                    //Envoi OK ou KO si connexion accepté(5) et créer la room
+                    if (OK == "OK")
+                    {
+                        SendOKorKO(1, client);
+
+                        OK = Get(client);
+                        //Créer salle et attend tous les joueurs
+                        IPEndPoint newEndPoint = new(ip, roomPort);
+                        Task<Socket> task = ServerGame.Room.StartServer(newEndPoint, serverChoose.maxconnexions, serverChoose.password, serverChoose.timeout);
+
+
+                        SendOKorKO(1, client);
+                        task.Wait();
+                        client.Disconnect(true);
+
+                        Socket room = task.Result;
+                        connexions++;
+
+                        // -- Game protocole 
+                        //Identification
+                        Task ready = ServerGame.Room.StartGame(room, roomPort, envoiID, namePlayer);
+                        ready.Wait();
+
+                        //Game
+                        Task start = ServerGame.Room.Game();
+                        start.Wait();
+
+
+                    }
+                    else
+                        SendOKorKO(0, client);
+                }
+                catch(Exception ex)
+                {
+                    client.Disconnect(true);
+                    Console.WriteLine(ex);
+                }
+            }
+            
+        }
+
         public static bool SendProtocol(Socket client)
         {
             string yaml = DiamonDMain.Yaml.Serialize(protocolChoose);
@@ -187,7 +297,7 @@ namespace Server
             else
             {
                 client.Send(msgKO);
-                client.Close();
+                client.Disconnect(true);
             }
         }
 
@@ -227,104 +337,6 @@ namespace Server
             return send;
         }
 
-        public static void ConnectClient(Socket client)
-        {
-            if (connexions == serverChoose.maxconnexions)
-            {
-                connexions = 0;
-                
-            }
-            if (connexions == serverChoose.maxconnexions || connexions == 0)
-            {
-                roomOpen = -1;
-            }
-
-            byte[] buffer = new byte[1024];      
-
-            byte[] msg = null;
-            int bytesSent = 0;
-            string notOK = "KO";
-
-            //Envoi du protocol à sérialiser (1)             
-            bool envoiProtocol = SendProtocol(client);
-            if (!envoiProtocol)
-                client.Close();
-
-            //Reçoit réponse protocol + name + password à désérialiser (4)
-            //Reçoit protocol
-            int length = client.Receive(buffer);
-            string data = Encoding.ASCII.GetString(buffer, 0, length);
-            DiamonDMain.ProtocolMessageClient protocolClient;
-            protocolClient = DeserializeProtocolClient(data);
-
-            //Reçoit name
-            string name = Get(client);
-
-            //Sépare deux envois du client trop rapides
-            SendOKorKO(1, client);
-
-            //Reçoit password
-            string pwdClient = Get(client);            
-
-            //Vérifier name et password
-            if (serverChoose.password == pwdClient)
-            {
-                //Envoi ID (5)                
-                string envoiID = SendID(client);
-                if (envoiID == "")
-                    client.Close();
-
-                string OK = Get(client);
-
-                //Envoi port (5)
-                int roomPort = SendPort(client);
-                if (roomPort == -1)
-                    client.Close();
-
-                OK = Get(client);
-
-                //Envoi OK ou KO si connexion accepté(5) et créer la room
-                if (OK == "OK")
-                {
-                    SendOKorKO(1, client);
-
-                    OK = Get(client);
-                    //Créer salle et attend tous les joueurs
-                    IPEndPoint newEndPoint = new(ip, roomPort);
-                    Task<Socket> task = ServerGame.Room.StartServer(newEndPoint, serverChoose.maxconnexions, serverChoose.password);
-
-
-                    SendOKorKO(1, client);
-                    task.Wait();
-                    client.Close();
-
-                    Socket room = task.Result;
-                    connexions++;
-
-                    // -- Game protocole 
-                    //Identification
-                    Task ready = ServerGame.Room.StartGame(room, roomPort, envoiID, name);
-                    ready.Wait();
-
-                    //Game
-                    Task start = ServerGame.Room.Game();
-                    start.Wait();
-
-
-                }
-                else
-                {
-                    SendOKorKO(0, client);
-                }
-            }
-            else
-            {
-                SendOKorKO(0, client);
-            }
-
-            //listener.Dispose();
-        }
-
         public static string Get(Socket client)
         {
             byte[] buffer = new byte[1024];
@@ -338,33 +350,6 @@ namespace Server
             DiamonDMain.Joueur player = new DiamonDMain.Joueur(name, id);
             joueurs.Add(id, player);
             
-        }
-
-        public static void InsertGamer(String tempName, String tempPWD)
-        {
-            tempPWD = "0044";
-
-            String path = @"\Diamond\Ressources\client.yaml";
-            using (FileStream fs = File.Create(path))
-            {
-                string str = templateYaml.Replace("<PORT>", endPoint.Port.ToString()).Replace("<PWD>", tempPWD).Replace("<NAME>", tempName).Replace("<ADRESS>", endPoint.Address.ToString());
-                UTF8Encoding encoding = new UTF8Encoding(true);
-                byte[] text = encoding.GetBytes(str);
-                fs.Write(text, 0, text.Length);
-            }
-
-        }
-
-        public static string Openleficher(String tempName, String tempPWD)
-        {
-            String path = @"Ressources\Server.yaml";
-            using (FileStream fs = File.OpenRead(path))
-            {
-                byte[] buffer = new byte[fs.Length];
-                if (fs.CanRead)
-                    fs.Read(buffer, 0, (int)fs.Length);
-                return buffer.ToString();
-            }
         }
 
         public static Ressources.Config DeserializeConfig(string path)
@@ -406,7 +391,7 @@ namespace Server
             string serverNames = "";
             foreach (Server serv in configChoose.configurations)
             {
-                serverNames += serv.name1 + "   ";
+                serverNames += serv.name + "   ";
             }
 
             Console.WriteLine("Choisir un server :");
@@ -415,7 +400,7 @@ namespace Server
 
             foreach (Server serv in configChoose.configurations)
             {
-                if (configName == serv.name1)
+                if (configName == serv.name)
                     serverChoose = serv;
             }
         }

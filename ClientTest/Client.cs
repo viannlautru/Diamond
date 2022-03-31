@@ -16,7 +16,6 @@ namespace ClientTest
         public static IPAddress ip;
         public static IPEndPoint endPoint;
         public static DiamonDMain.ProtocolMessageServer protocol;
-
         public int bytesSent = 0;
         public void Connect()
         {
@@ -27,7 +26,6 @@ namespace ClientTest
             {                
                 Socket socket = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 socket.Connect(endPoint);
-                
 
                 //Reçoit le protocole et le désérialise (2)
                 GetProtocol(socket);
@@ -131,8 +129,6 @@ namespace ClientTest
                 //Déconnexion
                 else
                     Stop(socket);
-
-
             }
             catch (Exception e)
             {
@@ -152,16 +148,18 @@ namespace ClientTest
                 if (file.IndexOf(".yaml") != -1)
                 {
                     string newFile = file.Replace(".yaml", "");
-                    resp += newFile.Substring(file.IndexOf(@"\Ressources\") + 12) + "   ";
+                    newFile = newFile.Substring(file.IndexOf(@"\Ressources\") + 12) + "   ";
+                    resp += newFile;
                 }
-
             }
+
             Console.WriteLine(resp);
-            string? path = null;
-            while (path == null) { path = Console.ReadLine(); }
-            path = DiamonDMain.Yaml.GetPath(path);
+            string? choose = null;
+            while (choose == null) { choose = Console.ReadLine(); }
+            string path = DiamonDMain.Yaml.GetPath(choose);
 
             parser = DeserializePathParser(path);
+
             ip = new IPAddress(parser.address);
             endPoint = new IPEndPoint(ip, parser.port);
         }
