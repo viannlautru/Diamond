@@ -10,6 +10,7 @@ namespace DiamonDMain
     {
         private string type { get; set; }
         private static int instances = 0;
+        public Dictionary<int, Carte> CarteJouer;
         public Carte(string type)
         {
             this.type = type;
@@ -20,15 +21,24 @@ namespace DiamonDMain
         {
             instances++;
         }
-        public int GetInstances(){
+        public int GetInstances()
+        {
             return instances;
-         }
+        }
+
+        public Dictionary<int, Carte> getCartejouer()
+        {
+            return CarteJouer;
+        }
+
     }
     public class Danger : Carte
     {
-        private string name;
-                                     
-        public Danger(String name = "") : base("Danger"){
+        private string name { get; set; }
+        private int quantity { get; set; }
+
+        public Danger(String name = "") : base("Danger")
+        {
             this.name = name;
         }
         public String GetPiege()
@@ -38,8 +48,11 @@ namespace DiamonDMain
     }
     public class Trophee : Carte
     {
+        private int montantTrophe = 0;
         public Trophee() : base("Trophee")
         {
+            var rand = new Random();
+            montantTrophe = rand.Next(1000);
         }
         public Trophee GetTrophee()
         {
