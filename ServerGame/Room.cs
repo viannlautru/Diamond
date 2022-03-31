@@ -96,14 +96,13 @@ namespace ServerGame
                 }
             });
             await receive;
-            
         }
 
         public static async Task Game()
         {
             Task start = Task.Run(() =>
             {
-
+                DiamonDMain.Partie.StartGame(joueurs);
             });
             await start;
         }
