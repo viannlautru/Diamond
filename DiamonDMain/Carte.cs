@@ -8,7 +8,7 @@ namespace DiamonDMain
 {
     public class Carte
     {
-        private string type { get; set; }
+        public string type { get; set; }
         private static int instances = 0;
         public Dictionary<int, Carte> CarteJouer;
         public Carte(string type)
@@ -48,11 +48,9 @@ namespace DiamonDMain
     }
     public class Trophee : Carte
     {
-        private int montantTrophe = 0;
         public Trophee() : base("Trophee")
         {
-            var rand = new Random();
-            montantTrophe = rand.Next(1000);
+
         }
         public Trophee GetTrophee()
         {
@@ -61,7 +59,7 @@ namespace DiamonDMain
     }
     public class Tresor : Carte
     {
-        private int montantTresor = 0;
+        public int montantTresor { get; set; }
         public Tresor() : base("Tresor")
         {
             var rand = new Random();
