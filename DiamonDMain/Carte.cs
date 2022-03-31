@@ -37,7 +37,7 @@ namespace DiamonDMain
         public string name { get; set; }
         public int quantity { get; set; }
 
-        public Danger(String name = "") : base("Danger")
+        public Danger(String name) : base("Danger")
         {
             this.name = name;
         }
