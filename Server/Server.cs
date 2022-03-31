@@ -166,7 +166,7 @@ namespace Server
                     OK = Get(client);
 
                     //Envoi OK ou KO si connexion accepté(5) et créer la room
-                    if (OK == "OK")
+                    if (OK == "OK" && client.Connected)
                     {
                         SendOKorKO(1, client);
 
@@ -340,9 +340,13 @@ namespace Server
 
         public static string Get(Socket client)
         {
-            byte[] buffer = new byte[1024];
-            int length = client.Receive(buffer);
-            string data = Encoding.ASCII.GetString(buffer, 0, length);
+            string data = "";
+            if (client.Connected && client.Available != 0)
+            {
+                byte[] buffer = new byte[1024];
+                int length = client.Receive(buffer);
+                data = Encoding.ASCII.GetString(buffer, 0, length);
+            }
             return data;
         }
 
