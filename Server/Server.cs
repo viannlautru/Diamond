@@ -50,6 +50,7 @@ namespace Server
         private static DiamonDMain.ProtocolMessageServer protocolChoose;
         private static Server serverChoose;
         private static Socket roomCreate;
+        public static Dictionary<string, Socket> sockets = new();
 
         private static DiamonDMain.Partie game;
 
@@ -59,9 +60,6 @@ namespace Server
 
         private static int connexions;
         private static Dictionary<string, DiamonDMain.Joueur> joueurs = new Dictionary<string, DiamonDMain.Joueur>();
-
-        private static DiamonDMain.Joueur player1;
-        private static DiamonDMain.Joueur player2;
 
         private static int roomOpen;
 
@@ -106,7 +104,7 @@ namespace Server
             return send;
         }
 
-        public static bool SendID(Socket client)
+        public static string SendID(Socket client)
         {
             //On créer une chaine de nombre aléatoire
             Random aleatoire = new Random();
@@ -121,7 +119,8 @@ namespace Server
             byte[] msg = Encoding.ASCII.GetBytes(ID);
 
             bool send = SendWork(msg, client);
-            return send;
+            if (send) return ID;
+            else return "";
         }
 
         public static int SendPort(Socket client)
@@ -203,7 +202,15 @@ namespace Server
                 client.Send(msgKO);
                 client.Close();
             }
-        }        
+        }
+
+        public static bool SendPlay(Socket client)
+        {
+            byte[] msg = Encoding.ASCII.GetBytes("La partie va commencer");
+
+            bool send = SendWork(msg, client);
+            return send;
+        }
 
         public static void ConnectClient(Socket client)
         {
@@ -242,14 +249,14 @@ namespace Server
             SendOKorKO(1, client);
 
             //Reçoit password
-            string pwdClient = Get(client);
+            string pwdClient = Get(client);            
 
             //Vérifier name et password
             if (serverChoose.password == pwdClient)
             {
                 //Envoi ID (5)                
-                bool envoiID = SendID(client);
-                if (!envoiID)
+                string envoiID = SendID(client);
+                if (envoiID == "")
                     client.Close();
 
                 string OK = Get(client);
@@ -262,18 +269,15 @@ namespace Server
                 OK = Get(client);
 
                 //Envoi OK ou KO si connexion accepté(5) et créer la room
-                if (envoiProtocol && envoiID)
+                if (OK == "OK")
                 {
                     SendOKorKO(1, client);
 
                     OK = Get(client);
                     //Créer salle et attend tous les joueurs
-
-                    //CreateRoom(roomPort);
-
                     IPEndPoint newEndPoint = new(ip, roomPort);
                     Task<Socket> task = ServerGame.Room.StartServer(newEndPoint, serverChoose.maxconnexions);
-                    
+
 
                     SendOKorKO(1, client);
                     task.Wait();
@@ -282,13 +286,43 @@ namespace Server
                     Socket room = task.Result;
                     connexions++;
 
+                    client = room.Accept();
+                    sockets.Add(roomPort.ToString() + envoiID, client);
 
-                        Socket server = room.Accept();
+                    //Reçoit id de session (8)
+                    string idSession = Get(client);
 
-                    
-                    
-                    
-                    //ReceiveIdPassword(client);
+                    //Reçoit password (8)
+                    pwdClient = Get(client);
+
+                    //Envoi OK ou KO (9)
+                    if (pwdClient == serverChoose.password)
+                        SendOKorKO(1, client);
+                    else
+                        SendOKorKO(0, client);
+
+                    OK = Get(client);
+
+                    //Créer joueur et ajoute dans la liste
+                    CreatePlayer(name, idSession);
+
+                    //Envoi PLAY
+                    if (serverChoose.maxconnexions == ServerGame.Room.connexions)
+                    {
+                        foreach (var key in sockets.Keys)
+                        {
+                            Socket model = sockets[key];
+                            int port = int.Parse(key.Substring(0, 5));
+                            if (port == roomPort)
+                            {
+                                bool envoiPlay = SendPlay(model);
+                                if (!envoiPlay)
+                                    model.Close();
+                            }
+                        }
+
+
+                    }
                 }
                 else
                 {
@@ -311,55 +345,11 @@ namespace Server
             return data;
         }
 
-
-
-        public static void CreatePlayer(string passwordClient, string playerID)
+        public static void CreatePlayer(string name, string id)
         {
-            if (connexions == 1)
-            {
-                player1 = new DiamonDMain.Joueur(passwordClient, ClientTest.Ressources.Player1.GetName(),
-                    playerID, serverChoose.port);
-                joueurs.Add(playerID, player1);
-            }
-            if (connexions == 2)
-            {
-                player2 = new DiamonDMain.Joueur(passwordClient, ClientTest.Ressources.Player2.GetName(),
-                    playerID, serverChoose.port);
-                joueurs.Add(playerID, player2);
-            }
-        }
-    
-
-        public static void ListenNewClient()
-        {            
-            Socket client = listener.Accept();
-            ConnectClient(client);
-        }
-
-        public static void ReceiveIdPassword(Socket clientConnect)
-        {
-
-            byte[] buffer = new byte[1024];
-
-            //Reçoit ID + password (8)
-            int length = clientConnect.Receive(buffer);
-            string data = Encoding.ASCII.GetString(buffer, 0, length);
-            string playerID = data;
-
-            length = clientConnect.Receive(buffer);
-            data = Encoding.ASCII.GetString(buffer, 0, length);
-            string passwordClient = data;
-
-            //Envoi OK (9)
-            if (serverChoose.password == passwordClient)
-            {
-                SendOKorKO(1, clientConnect);
-                CreatePlayer(passwordClient, playerID);
-            }
-            else
-            {
-                SendOKorKO(0, clientConnect);
-            }
+            DiamonDMain.Joueur player = new DiamonDMain.Joueur(name, id);
+            joueurs.Add(id, player);
+            
         }
 
         public static void InsertGamer(String tempName, String tempPWD)
@@ -376,6 +366,7 @@ namespace Server
             }
 
         }
+
         public static string Openleficher(String tempName, String tempPWD)
         {
             String path = @"Ressources\Server.yaml";
@@ -387,6 +378,7 @@ namespace Server
                 return buffer.ToString();
             }
         }
+
         public static Ressources.Config DeserializeConfig(string path)
         {
             var deserializer = new YamlDotNet.Serialization.DeserializerBuilder()

@@ -79,7 +79,37 @@ namespace ClientTest
 
                     //Client se déconnecte du serveur et se connecte à la salle (7)
                     Socket room = RoomConnect(port);
-                    
+                    socket.Close();
+
+                    Console.WriteLine("En attente d'autres joueurs...");
+
+                    //Envoi ID de session (7)
+                    SendSession(room, ID);
+
+                    //Envoi password (7)
+                    SendPwd(room);
+
+                    //Reçoit OK ou KO (10)
+                    length = room.Receive(buffer);
+                    data = Encoding.ASCII.GetString(buffer, 0, length);
+                    CheckKO(data, room);
+                    OK = data;
+
+                    SendOKorKO(1, room);
+
+                    //Reçoit PLAY
+                    length = room.Receive(buffer);
+                    data = Encoding.ASCII.GetString(buffer, 0, length);
+                    CheckKO(data, room);
+                    string play = data;
+
+                    Console.WriteLine(play);
+
+                    //Reçoit instructions
+
+                    //Reçoit OK ou KO
+
+
 
                 }
                 //Déconnexion
@@ -92,36 +122,6 @@ namespace ClientTest
             {
                 Console.WriteLine("Unexpected exception : {0}", e.ToString());
             }
-        }
-
-        public void SendDataToRoom(Socket room)
-        {
-            ////Envoi ID (7)
-            //byte[] msg = Encoding.ASCII.GetBytes(ID);
-            //bytesSent = room.Send(msg);
-
-            ////Envoi password (7)
-            //if (parser.password == null)
-            //    Stop(room);
-            //else
-            //{
-            //    msg = Encoding.ASCII.GetBytes(parser.password);
-            //    bytesSent = room.Send(msg);
-            //}
-
-            ////Reçoit confirmation (10)
-            //length = room.Receive(buffer);
-            //data = Encoding.ASCII.GetString(buffer, 0, length);
-            //CheckKO(data, room);
-            //OK = data;
-
-            //if (OK == "KO")
-            //    Stop(room);
-            ////Lance jeu
-            //else
-            //{
-
-            //}
         }
 
         public void GetConfig()
@@ -196,6 +196,12 @@ namespace ClientTest
         {
             byte[] pwd = Encoding.ASCII.GetBytes(parser.password);
             bytesSent = socket.Send(pwd);
+        }
+
+        public void SendSession(Socket room, string id)
+        {
+            byte[] session = Encoding.ASCII.GetBytes(id);
+            bytesSent = room.Send(session);
         }
 
         public void CheckKO(string msg, Socket socket)

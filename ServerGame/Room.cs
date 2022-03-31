@@ -15,7 +15,8 @@ namespace ServerGame
         private static Socket room;
         private static int port;
         private static int maxconnexions;
-        private static int connexions;
+        public static int connexions;
+        
 
         private static Task createRoom;
 
