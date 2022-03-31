@@ -41,6 +41,9 @@ namespace DiamonDMain
         {
             this.name = name;
         }
+        public Danger() : base("Danger")
+        {
+        }
         public String GetPiege()
         {
             return this.name;
