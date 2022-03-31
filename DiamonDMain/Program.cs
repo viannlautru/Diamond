@@ -12,7 +12,7 @@ namespace DiamonDMain
         static void Main(string[] args)
         {
             Carte c = Tirercarte();
-            DeserializeGame();
+            Partie.CreaCarte();
             
         }
         public static Carte Tirercarte()
@@ -24,17 +24,6 @@ namespace DiamonDMain
             c = (Carte)a[rand.Next(a.Count)];
             }
             return c; 
-        }
-          public static object DeserializeGame()
-        {
-            String path = @"../../../../Server\Ressources\Server.yaml";
-
-            var deserializer = new YamlDotNet.Serialization.DeserializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
-            .Build();
-            Object config = deserializer.Deserialize<Object>(File.ReadAllText(path));
-
-            return config;
         }
     }
 }

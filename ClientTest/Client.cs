@@ -36,62 +36,100 @@ namespace ClientTest
                 SendProtocol(socket);
 
                 //Envoi name (3)
-                byte[] name = Encoding.ASCII.GetBytes(parser.name);
-                bytesSent = socket.Send(name);
+                SendName(socket);
 
-                //Envoi password (3)
-                byte[] pwd = Encoding.ASCII.GetBytes(parser.password);
-                bytesSent = socket.Send(pwd);
-
+                //Reçoit OK du server
                 byte[] buffer = new byte[1024];
-                //Reçoit ID + Port + OK ou KO (6)
                 int length = socket.Receive(buffer);
                 string data = Encoding.ASCII.GetString(buffer, 0, length);
                 CheckKO(data, socket);
+
+                //Envoi password (3)
+                SendPwd(socket);
+
+                
+                //Reçoit ID + Port + OK ou KO (6)
+                length = socket.Receive(buffer);
+                data = Encoding.ASCII.GetString(buffer, 0, length);
+                CheckKO(data, socket);
                 string ID = data;
+
+                SendOKorKO(1, socket);
 
                 length = socket.Receive(buffer);
                 data = Encoding.ASCII.GetString(buffer, 0, length);
                 CheckKO(data, socket);
                 int port = int.Parse(data);
 
+                SendOKorKO(1, socket);
+
                 length = socket.Receive(buffer);
                 data = Encoding.ASCII.GetString(buffer, 0, length);
                 CheckKO(data, socket);
                 string OK = data;
 
+                SendOKorKO(1, socket);
+
                 if (OK == "OK")
                 {
+                    length = socket.Receive(buffer);
+                    data = Encoding.ASCII.GetString(buffer, 0, length);
+                    CheckKO(data, socket);
+                    OK = data;
+
                     //Client se déconnecte du serveur et se connecte à la salle (7)
+                    Socket room = RoomConnect(port);
+                    socket.Close();
 
-                        Socket room = RoomConnect(port);
+                    Console.WriteLine("En attente d'autres joueurs...");
 
-                        //Envoi ID (7)
-                        byte[] msg = Encoding.ASCII.GetBytes(ID);
-                        bytesSent = room.Send(msg);
+                    //Envoi ID de session (7)
+                    SendSession(room, ID);
 
-                        //Envoi password (7)
-                        if (parser.password == null)
-                            Stop(room);
-                        else
-                        {
-                            msg = Encoding.ASCII.GetBytes(parser.password);
-                            bytesSent = room.Send(msg);
-                        }
+                    length = room.Receive(buffer);
+                    data = Encoding.ASCII.GetString(buffer, 0, length);
+                    CheckKO(data, room);
+                    OK = data;
 
-                        //Reçoit confirmation (10)
-                        length = room.Receive(buffer);
-                        data = Encoding.ASCII.GetString(buffer, 0, length);
-                        CheckKO(data, room);
-                        OK = data;
+                    //Envoi password (7)
+                    SendPwd(room);
 
-                        if (OK == "KO")
-                            Stop(room);
-                        //Lance jeu
-                        else
-                        {
+                    //Reçoit OK ou KO (10)
+                    length = room.Receive(buffer);
+                    data = Encoding.ASCII.GetString(buffer, 0, length);
+                    CheckKO(data, room);
+                    OK = data;
 
-                        }
+                    SendOKorKO(1, room);
+
+                    //Reçoit PLAY
+                    length = room.Receive(buffer);
+                    data = Encoding.ASCII.GetString(buffer, 0, length);
+                    CheckKO(data, room);
+                    string play = data;
+
+                    Console.WriteLine(play);
+
+                    SendOKorKO(1, room);
+
+                    //Reçoit instructions
+                    buffer = new byte[2048];
+                    length = room.Receive(buffer);
+                    data = Encoding.UTF8.GetString(buffer, 0, length);
+                    CheckKO(data, room);
+                    string instructions = data;
+
+                    Console.WriteLine(instructions);
+
+                    SendOKorKO(1, room);
+
+                    //Reçoit OK ou KO
+                    length = room.Receive(buffer);
+                    data = Encoding.ASCII.GetString(buffer, 0, length);
+                    CheckKO(data, room);
+                    OK = data;
+
+
 
                 }
                 //Déconnexion
@@ -168,10 +206,39 @@ namespace ClientTest
             bytesSent = socket.Send(theMsg);
         }
 
+        public void SendName(Socket socket)
+        {
+            byte[] name = Encoding.ASCII.GetBytes(parser.name);
+            bytesSent = socket.Send(name);
+        }
+
+        public void SendPwd(Socket socket)
+        {
+            byte[] pwd = Encoding.ASCII.GetBytes(parser.password);
+            bytesSent = socket.Send(pwd);
+        }
+
+        public void SendSession(Socket room, string id)
+        {
+            byte[] session = Encoding.ASCII.GetBytes(id);
+            bytesSent = room.Send(session);
+        }
+
         public void CheckKO(string msg, Socket socket)
         {
             if (msg == "KO")
                 Stop(socket);            
+        }
+
+        public void SendOKorKO(int i, Socket socket)
+        {
+            if (i == 1)
+                socket.Send(Encoding.ASCII.GetBytes("OK"));
+            else
+            {
+                socket.Send(Encoding.ASCII.GetBytes("KO"));
+                socket.Close();
+            }
         }
 
         public static void Stop(Socket socket)
@@ -191,7 +258,7 @@ namespace ClientTest
             Socket room = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             room.Connect(newEndPoint);
-            Console.WriteLine("Vous êtes dans une salle.");
+            Console.WriteLine("Vous êtes dans la salle : " + port);
             return room;
         }        
 

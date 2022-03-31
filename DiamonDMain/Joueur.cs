@@ -8,9 +8,6 @@ namespace DiamonDMain
 {
     public class Joueur
     {
-        public string address { get; set; }
-        public int port { get; set; }
-        public string password { get; set; }
         public string name { get; set; }
         public string id { get; set; }
         public bool exit { set; get; }
@@ -19,12 +16,10 @@ namespace DiamonDMain
         public int main { set; get; }
         public int diamands { set; get; }
         public Joueur() { }
-        public Joueur(string password, string nom, string id, int port)
+        public Joueur(string nom, string id)
         {
-            this.password = password;
             this.name = nom;
             this.id = id;
-            this.port = port;
             diamands = 0;
             this.chest = new Coffre_fort();
         }

@@ -13,10 +13,11 @@ namespace Server.Ressources
         public List<DiamonDMain.Partie> games { get; set; }
 
         public Config() { }
-        public Config(string name, List<Server> conf)
+        public Config(string name, List<Server> conf, List<DiamonDMain.Partie> games)
         {
             this.name = name;
             configurations = conf;
+            this.games = games;
         }
     }
 }
