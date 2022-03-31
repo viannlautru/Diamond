@@ -77,7 +77,7 @@ namespace DiamonDMain
             //Creation du packet de carte on divise part 4 pour les 4 type de cartes on avoir un bon nombre égale de carte
             //n est la récupération de la quantité de carte dans le dossier config de la partie
             var i = 0;
-            var n = gameChoose.allCardsquantity;
+            var n = gameChoose.cardsquantity;
             while (i < n)
             {
                 if (i <= n / 2)
