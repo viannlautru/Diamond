@@ -41,7 +41,5 @@ namespace DiamonDMain
             leCamp.JoueurCamp.Remove(joueur);
             return joueur;
         }
-                     
-
     }
 }

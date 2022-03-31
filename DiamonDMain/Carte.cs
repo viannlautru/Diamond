@@ -55,7 +55,8 @@ namespace DiamonDMain
 
         public Trophee() : base("Trophee")
         {
-
+            var rand = new Random();
+            montantTrophee = rand.Next(42);
         }
         public Trophee GetTrophee()
         {
@@ -66,7 +67,7 @@ namespace DiamonDMain
     {
         public int montantTresor { get; set; }
         public Tresor() : base("Tresor")
-        {
+        {                                                                                                                                    
             var rand = new Random();
             montantTresor = rand.Next(10);
         }

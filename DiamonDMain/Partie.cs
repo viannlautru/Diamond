@@ -12,7 +12,7 @@ namespace DiamonDMain
         public string id { get; set; }
         public int maxplayers { get; set; }
         public int caves { get; set; }
-        public int cardsquantity { get; set; }
+        public int allCardsquantity { get; set; }
         public List<Danger> traps { get; set; }
 
 
@@ -22,14 +22,16 @@ namespace DiamonDMain
         public Camp leCamp { get; set; }
         public Joueur joueur { get; set; }
 
-        public Partie() {
+        public Partie()
+        {
             this.type = 0;
             CreateCaves();
         }
 
         public static List<Carte> allCards = new List<Carte>();
         public static List<Carte> PlayedCards = new List<Carte>();
-        
+        public Dictionary<int, Joueur> JoueurIntermediaire;
+  
 
 
         public void StartGame(Dictionary<string, Joueur> joueurs)
@@ -46,27 +48,25 @@ namespace DiamonDMain
         }
         public void CreateCaves()
         {
-            //if (type == 0)
-            //{
-            //    for (int i = 1; i <= 5; i++)
-            //    {
-            //        caves.Add(new Grotte());
-            //    }
-            //}
+            if (caves <= 0)
+                EndGame();
+            else
+                caves--;
         }
+        public void EndGame()
+        {
 
+        }
         public static void CreaCarte()
         {
             List<Partie> games = Yaml.DeserializeGame("Server");
             Partie gameChoose = games.First();
-
-            
             foreach (var trap in gameChoose.traps)
             {
                 var tq = 0;
                 int q = trap.quantity;
                 string t = trap.name;
-                while(tq < q)
+                while (tq < q)
                 {
                     //Ajouter les traps dans la pioche
                     allCards.Add(trap);
@@ -76,35 +76,73 @@ namespace DiamonDMain
             //Creation du packet de carte on divise part 4 pour les 4 type de cartes on avoir un bon nombre égale de carte
             //n est la récupération de la quantité de carte dans le dossier config de la partie
             var i = 0;
-            var n = gameChoose.cardsquantity;
+            var n = gameChoose.allCardsquantity;
             while (i < n)
             {
-                if(i<=n/2)
+                if (i <= n / 2)
                     allCards.Add(new Trophee());
-                else 
+                else
                     allCards.Add(new Tresor());
                 i++;
             }
         }
 
-        public void ExitCave(Danger trap)
+        public void ExitCave(Carte trap)
         {
-            foreach(var card in PlayedCards)
+            foreach (var card in PlayedCards)
             {
                 if (card == trap)
                     Fingrotte();
             }
         }
-
-        public void VerifTrophee()
+        public void getCartUtilise(Carte card)
         {
-
+            switch (card.GetType().Name)
+            {
+                case "Danger":
+                    ExitCave(card);
+                    break;
+                case "Trophee":
+                    break;
+                case "Tresor":
+                    Partager(card);
+                    break;
+            }
+            PlayedCards.Add(card);
         }
-
-        public void Fingrotte(){
-            for (var i =0; i >= laGrotte.getjoueurGrotte().Count; i++) {
+        public string forechcardsTrophee()
+        {
+            var nombreDiamsTrophee = 0;
+            foreach (var o in PlayedCards)
+            {
+                if("Trophee" == o.GetType().Name)
+                {
+                    nombreDiamsTrophee += ((Trophee)o).montantTrophee;
+                    PlayedCards.Remove(o);
+                }
+                
+            }
+            return nombreDiamsTrophee + ",";
+        }
+        public List<Carte> RecupCardsDiams()
+        {
+            List<Carte> CardsTresorrest = new List<Carte>();
+            foreach (var o in PlayedCards)
+            {
+                if ("Tresor" == o.GetType().Name)
+                {
+                    CardsTresorrest.Add(o);
+                    PlayedCards.Remove(o);
+                }
+            }
+            return CardsTresorrest;
+        }
+        public void Fingrotte()
+        {
+            for (var i = 0; i >= laGrotte.getjoueurGrotte().Count; i++)
+            {
                 //enleve les joueurs de la grotte et les mets dans le camp
-                leCamp.addCampUtilisateur(laGrotte.Joueurgrotte.Keys.ElementAt(i)) ;
+                leCamp.addCampUtilisateur(laGrotte.Joueurgrotte.Keys.ElementAt(i));
             }
         }
         public void debutgrotte()
@@ -115,7 +153,6 @@ namespace DiamonDMain
                 laGrotte.addGrotteUtilisateur(leCamp.JoueurCamp.Keys.ElementAt(i));
             }
         }
-
         public bool Continuer()
         {
             if (laGrotte.getjoueurGrotte().Count <= 0)
@@ -126,22 +163,37 @@ namespace DiamonDMain
         public bool DistributeCards()
         {
             //tirage aléatoire sur la liste allCards qui est comme la pioche 
-            for (var i = 0; i >= laGrotte.getjoueurGrotte().Count; i++)
-            {
-                int rand = new Random().Next(allCards.Count);
-                Carte card = allCards[rand];
-                allCards.Remove(card);
+            int rand = new Random().Next(allCards.Count);
+            Carte card = allCards[rand];
+            allCards.Remove(card);
 
-                //if (c.GetType().Name == "Tresor")
-                //    Partager((Tresor)c);
-                //allCards.Remove(key);
-            }
-                return true;
+            //if (c.GetType().Name == "Tresor")
+            //    Partager((Tresor)c);
+            //allCards.Remove(key);
+            getCartUtilise(card);
+            return true;
         }
-        public void Partager(Tresor tresor)
+        public void pushIntermediaire(int joueur)
         {
-            int montant = tresor.GetMontant() / laGrotte.getjoueurGrotte().Count;
-            laGrotte.getjoueurGrotte().All(c => { c.Value.diamands += montant; return true; });
+            if (laGrotte.Joueurgrotte.ContainsKey(joueur))
+            {
+                JoueurIntermediaire.Add(joueur, laGrotte.Joueurgrotte[joueur]);
+            }
+            laGrotte.Joueurgrotte.Remove(joueur);
+        }
+        public void RecupRestDiams()
+        {
+            List<Carte> CardsTresorrest = RecupCardsDiams();
+            foreach(var s in CardsTresorrest)
+            {
+                Partager(s, JoueurIntermediaire);
+            }
+        }
+        public void Partager(Carte tresor, Dictionary<int, Joueur> joueurs = null)
+        {
+            int montant = 0;
+            montant = ((Tresor)tresor).Partager(joueurs.Count);
+            joueurs.All(c => { c.Value.diamands += montant; return true; });
         }
     }
 }
