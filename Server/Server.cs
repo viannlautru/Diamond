@@ -67,7 +67,8 @@ namespace Server
         public static void Start()
         {
             GetConfig();
-            GetProtocol();            
+            GetProtocol();
+            Console.WriteLine("Server démarré.");
             
             endPoint = new IPEndPoint(ip, serverChoose.port);
             listener = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -398,6 +399,14 @@ namespace Server
             Console.WriteLine(serverNames);
             string configName = Console.ReadLine();
 
+            while (configName == "" || !VerifConfig(configName))
+            {
+                Console.WriteLine("Choisir un server de la liste suivante : ");
+                Console.WriteLine(serverNames);
+                configName = Console.ReadLine();
+            }
+
+            //Récupère la bonne configuration
             foreach (Server serv in configChoose.configurations)
             {
                 if (configName == serv.name)
@@ -405,14 +414,34 @@ namespace Server
             }
         }
 
+        public static bool VerifConfig(string name)
+        {
+            bool trouve = false;
+            foreach (Server serv in configChoose.configurations)
+            {
+                if (name == serv.name)
+                    trouve = true;
+            }
+            return trouve;
+        }
+
         public static void GetProtocol()
         {
+            //Changer quand on implémente les nouvelles versions
+
             //Récupère protocol
             Console.WriteLine("Choisir le protocol :");
+            
             Console.WriteLine("1");
             string protocolName = Console.ReadLine();
-            string longPath = "";
 
+            while (protocolName == "" || protocolName != "1")
+            {
+                Console.WriteLine("Veuillez entrer 1");
+                protocolName = Console.ReadLine();
+            }
+
+            string longPath;
             if (protocolName == "1")
                 longPath = DiamonDMain.Yaml.GetPath("Protocol1");
             else
