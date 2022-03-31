@@ -87,25 +87,14 @@ namespace ServerGame
                             if (!envoiPlay)
                                 model.Close();
                         }
-                    }
 
-                    OK = Get(client);
-
-                    //Envoi instructions
-                    foreach (var key in sockets.Keys)
-                    {
-                        Socket model = sockets[key];
+                        //Envoi instructions
                         bool envoi = SendInstructions(model);
                         if (!envoi)
                             model.Close();
-                    }
 
-                    OK = Get(client);
 
-                    //Envoi OK
-                    foreach (var key in sockets.Keys)
-                    {
-                        Socket model = sockets[key];
+                        //Envoi OK
                         SendOKorKO(1, model);
                     }
                     connexions = 0;
