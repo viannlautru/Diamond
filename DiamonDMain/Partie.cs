@@ -34,9 +34,10 @@ namespace DiamonDMain
   
 
 
-        public void StartGame(Dictionary<string, Joueur> joueurs)
+        public static void StartGame(Dictionary<string, Joueur> joueurs)
         {
             Partie partie = new Partie(joueurs);
+            Console.ReadLine();
         }
 
         //Partie rapide => 2 grottes
@@ -55,7 +56,7 @@ namespace DiamonDMain
         }
         public void EndGame()
         {
-
+            Console.WriteLine("Finit");
         }
         public static void CreaCarte()
         {
@@ -123,7 +124,7 @@ namespace DiamonDMain
                 
             }
             return nombreDiamsTrophee + ",";
-        }
+        } 
         public List<Carte> RecupCardsDiams()
         {
             List<Carte> CardsTresorrest = new List<Carte>();
