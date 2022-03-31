@@ -163,19 +163,6 @@ namespace Server
             return newPort;
         }
 
-        public static void CreateRoom(int port)
-        {
-            //on créer un serveur (une salle) qui récupère les joueurs
-            //ServerGame.Room.StartServer(port, serverChoose.maxconnexions);
-            
-            //IPEndPoint newEndPoint = new IPEndPoint(ip, port);
-            //roomCreate = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-            //roomCreate.Bind(newEndPoint);
-            //roomCreate.Listen(serverChoose.maxconnexions);
-            connexions++;
-        }
-
         public static bool SendWork(byte[] msg, Socket client)
         {
             int bytesSent;
@@ -212,7 +199,35 @@ namespace Server
             return send;
         }
 
-        public static void ConnectClient(Socket client)
+        public static bool SendInstructions(Socket client)
+        {
+            string instructions = @" => Règles du jeu : 4 cartes 
+                    - Cartes Trésor : un nombre de diamants aléatoire est à partager équitablement entre les joueurs 
+                    encore présents dans la grotte.
+                    - Cartes Trophée: la carte Trophée reste sur le chemin de la grotte et rien ne se passe. La carte 
+                    ne prendra sa valeur qu’au moment où un joueur quittera la grotte en sa possession.
+                    - Cartes Danger : si un danger apparait pour la première fois depuis votre entrée dans la grotte, 
+                    il ne se passe rien et l’expédition continue. Par contre, si le même danger est révélé une seconde
+                    fois, tous les joueurs encore présents dans la grotte rentrent immédiatement au campement les 
+                    mains vides. L’une des deux cartes Danger identiques est retirée du jeu et seule l’autre est 
+                    remise dans la pioche de cartes Expédition.
+                    - Carte Sortir : vous rentrez au campement. Sur le chemin du retour, ramassez tous les Diamants 
+                    restants sur les cartes Trésor. Si plusieurs joueurs sortent en même temps, ils se partagent en 
+                    parts égales l’ensemble des Diamants restants. Si plusieurs joueurs sortent en même temps, personne
+                    ne prend les cartes Trophées. Par contre, si un joueur est seul à sortir, il prend toutes les 
+                    cartes Trophées présentes dans la grotte, qui lui rapportent des Diamants. 
+                    Tous les Diamonts récoltées serons ensuite mis dans votre coffre.
+                    => Fin de la manche
+                    Une expédition prend fin lorsque tous les joueurs sont rentrés au campement ou lorsqu’un 
+                    même Danger apparaît pour la deuxième fois dans la grotte.";
+
+            byte[] msg = Encoding.UTF8.GetBytes(instructions);
+
+            bool send = SendWork(msg, client);
+            return send;
+        }
+
+        public static async void ConnectClient(Socket client)
         {
             if (connexions == serverChoose.maxconnexions)
             {
@@ -276,7 +291,7 @@ namespace Server
                     OK = Get(client);
                     //Créer salle et attend tous les joueurs
                     IPEndPoint newEndPoint = new(ip, roomPort);
-                    Task<Socket> task = ServerGame.Room.StartServer(newEndPoint, serverChoose.maxconnexions);
+                    Task<Socket> task = ServerGame.Room.StartServer(newEndPoint, serverChoose.maxconnexions, serverChoose.password);
 
 
                     SendOKorKO(1, client);
@@ -286,43 +301,69 @@ namespace Server
                     Socket room = task.Result;
                     connexions++;
 
-                    client = room.Accept();
-                    sockets.Add(roomPort.ToString() + envoiID, client);
+                    // -- Game protocole 
+                    //Identification
+                    Task ready = ServerGame.Room.StartGame(room, roomPort, envoiID, name);
+                    ready.Wait();
 
-                    //Reçoit id de session (8)
-                    string idSession = Get(client);
-
-                    //Reçoit password (8)
-                    pwdClient = Get(client);
-
-                    //Envoi OK ou KO (9)
-                    if (pwdClient == serverChoose.password)
-                        SendOKorKO(1, client);
-                    else
-                        SendOKorKO(0, client);
-
-                    OK = Get(client);
-
-                    //Créer joueur et ajoute dans la liste
-                    CreatePlayer(name, idSession);
-
-                    //Envoi PLAY
-                    if (serverChoose.maxconnexions == ServerGame.Room.connexions)
-                    {
-                        foreach (var key in sockets.Keys)
-                        {
-                            Socket model = sockets[key];
-                            int port = int.Parse(key.Substring(0, 5));
-                            if (port == roomPort)
-                            {
-                                bool envoiPlay = SendPlay(model);
-                                if (!envoiPlay)
-                                    model.Close();
-                            }
-                        }
+                    //Game
 
 
-                    }
+
+                    //Socket room = task.Result;
+                    
+
+                    //client = room.Accept();
+                    //sockets.Add(roomPort.ToString() + envoiID, client);
+
+                    ////Reçoit id de session (8)
+                    //string idSession = Get(client);
+
+                    ////Reçoit password (8)
+                    //pwdClient = Get(client);
+
+                    ////Envoi OK ou KO (9)
+                    //if (pwdClient == serverChoose.password)
+                    //    SendOKorKO(1, client);
+                    //else
+                    //    SendOKorKO(0, client);
+
+                    //OK = Get(client);
+
+                    ////Créer joueur et ajoute dans la liste
+                    //CreatePlayer(name, idSession);
+
+                    ////Envoi PLAY
+                    //if (serverChoose.maxconnexions == ServerGame.Room.connexions)
+                    //{
+                    //    foreach (var key in sockets.Keys)
+                    //    {
+                    //        Socket model = sockets[key];
+                    //        int port = int.Parse(key.Substring(0, 5));
+                    //        if (port == roomPort)
+                    //        {
+                    //            bool envoiPlay = SendPlay(model);
+                    //            if (!envoiPlay)
+                    //                model.Close();
+                    //        }
+                    //    }
+                    //}
+
+                    //OK = Get(client);
+
+                    ////Envoi instructions
+
+                    //if (serverChoose.maxconnexions == ServerGame.Room.connexions)
+                    //{
+                    //    foreach (var key in sockets.Keys)
+                    //    {
+                    //        Socket model = sockets[key];
+                    //        bool envoi = SendInstructions(model);
+                    //        if (!envoi)
+                    //            model.Close();
+                            
+                    //    }
+                    //}
                 }
                 else
                 {

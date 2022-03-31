@@ -86,6 +86,11 @@ namespace ClientTest
                     //Envoi ID de session (7)
                     SendSession(room, ID);
 
+                    length = room.Receive(buffer);
+                    data = Encoding.ASCII.GetString(buffer, 0, length);
+                    CheckKO(data, room);
+                    OK = data;
+
                     //Envoi password (7)
                     SendPwd(room);
 
@@ -105,9 +110,24 @@ namespace ClientTest
 
                     Console.WriteLine(play);
 
+                    SendOKorKO(1, room);
+
                     //Reçoit instructions
+                    buffer = new byte[2048];
+                    length = room.Receive(buffer);
+                    data = Encoding.UTF8.GetString(buffer, 0, length);
+                    CheckKO(data, room);
+                    string instructions = data;
+
+                    Console.WriteLine(instructions);
+
+                    SendOKorKO(1, room);
 
                     //Reçoit OK ou KO
+                    length = room.Receive(buffer);
+                    data = Encoding.ASCII.GetString(buffer, 0, length);
+                    CheckKO(data, room);
+                    OK = data;
 
 
 
