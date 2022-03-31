@@ -25,7 +25,9 @@ namespace ClientTest
             try
             {                
                 Socket socket = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                socket.Connect(endPoint);
+                try { socket.Connect(endPoint); }
+                catch { Console.WriteLine("Aucun server ouvert. Veuillez retenter plus tard."); }
+                
 
                 //Reçoit le protocole et le désérialise (2)
                 GetProtocol(socket);
