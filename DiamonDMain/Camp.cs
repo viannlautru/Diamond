@@ -8,19 +8,20 @@ namespace DiamonDMain
 {
     public class Camp
     {
-        public Dictionary<int, Joueur> JoueurCamp;
+        public Dictionary<string, Joueur> JoueurCamp;
         public Grotte laGrotte;
 
-        public Dictionary<int, Joueur> getjoueurCamp()
+        public Dictionary<string, Joueur> getjoueurCamp()
         {
             return JoueurCamp;
         }
        
-        public int addCampUtilisateur(int joueur)
+        public string addCampUtilisateur(string joueur)
         {
             if (laGrotte.Joueurgrotte.ContainsKey(joueur))
             {
-                JoueurCamp.Add(joueur, laGrotte.Joueurgrotte[joueur]);
+                if(laGrotte.Joueurgrotte[joueur].exit)
+                    JoueurCamp.Add(joueur, laGrotte.Joueurgrotte[joueur]);
             }
             laGrotte.Joueurgrotte.Remove(joueur);
             return joueur;

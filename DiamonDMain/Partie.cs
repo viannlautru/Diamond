@@ -9,16 +9,18 @@ namespace DiamonDMain
 {
     public class Partie
     {
+        public static bool stop { get; set; }
+
         public string id { get; set; }
         public int maxplayers { get; set; }
-        public int caves { get; set; }
+        public static int caves { get; set; }
         public int cardsquantity { get; set; }
         public List<Danger> traps { get; set; }
 
 
         private int type { get; set; }  //Standard pour l'instant type = 0 partie rapide : type = 1
-        private Dictionary<string, Joueur> Joueurgrotte { get; set; }
-        public Grotte laGrotte { get; set; }
+        private static Dictionary<string, Joueur> Joueurgrotte { get; set; }
+        public static Grotte laGrotte { get; set; }
         public Camp leCamp { get; set; }
         public Joueur joueur { get; set; }
 
@@ -30,34 +32,48 @@ namespace DiamonDMain
 
         public static List<Carte> allCards = new List<Carte>();
         public static List<Carte> PlayedCards = new List<Carte>();
-        public Dictionary<int, Joueur> JoueurIntermediaire;
-  
+        public Dictionary<string, Joueur> JoueurIntermediaire;
+
 
 
         public static void StartGame(Dictionary<string, Joueur> joueurs)
         {
-            Partie partie = new Partie(joueurs);
-            Console.ReadLine();
-        }
+            var choix = "";
+            List<string> liste = new List<string>();
+            int id = -1;
+            while (!stop)
+            {
+                CreateCaves();
+                laGrotte.Initjoueurs(Joueurgrotte);
+                do
+                {
+                    Console.WriteLine("Continuer? Oui/Non");
+                    choix = Console.ReadLine();
+                    if (choix == "Non")
 
+                        liste.Add(Console.ReadLine());
+                } while (laGrotte.getjoueurGrotte().Count != liste.Count);
+            }
+        }
+        
         //Partie rapide => 2 grottes
-        public Partie(Dictionary<string, Joueur> Joueurgrotte, int type = 0)
+        public Partie(Dictionary<string, Joueur> Joueursgrotte, int type = 0)
         {
             this.type = type;
-            this.Joueurgrotte = Joueurgrotte;
+            Joueurgrotte = Joueursgrotte;
             CreateCaves();
         }
-        public void CreateCaves()
+        public static void CreateCaves()
         {
             if (caves <= 0)
                 EndGame();
             else
                 caves--;
         }
-        public void EndGame()
+        public static void EndGame()
         {
-            Console.WriteLine("Finit");
         }
+
         public static void CreaCarte()
         {
             List<Partie> games = Yaml.DeserializeGame("Server");
@@ -161,20 +177,25 @@ namespace DiamonDMain
             else
                 return true;
         }
-        public bool DistributeCards()
+        public String DistributeCards()
         {
             //tirage aléatoire sur la liste allCards qui est comme la pioche 
             int rand = new Random().Next(allCards.Count);
+            String val = "";
             Carte card = allCards[rand];
             allCards.Remove(card);
 
-            //if (c.GetType().Name == "Tresor")
-            //    Partager((Tresor)c);
+            if (card.type == "Tresor")
+                val = ((Tresor)card).montantTresor.ToString();
+            if (card.type == "Trophee")
+                val = ((Trophee)card).montantTrophee.ToString();
+            if (card.type == "Danger")
+                val = ((Danger)card).name;
             //allCards.Remove(key);
             getCartUtilise(card);
-            return true;
+            return "carte: " + card.type + "Valeur: " + val;
         }
-        public void pushIntermediaire(int joueur)
+        public void pushIntermediaire(string joueur)
         {
             if (laGrotte.Joueurgrotte.ContainsKey(joueur))
             {
@@ -190,7 +211,7 @@ namespace DiamonDMain
                 Partager(s, JoueurIntermediaire);
             }
         }
-        public void Partager(Carte tresor, Dictionary<int, Joueur> joueurs = null)
+        public void Partager(Carte tresor, Dictionary<string, Joueur> joueurs = null)
         {
             int montant = 0;
             montant = ((Tresor)tresor).Partager(joueurs.Count);

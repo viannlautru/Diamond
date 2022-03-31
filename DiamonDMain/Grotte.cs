@@ -9,7 +9,7 @@ namespace DiamonDMain
     public class Grotte
     {
         public bool Etat;
-        public Dictionary<int, Joueur> Joueurgrotte;
+        public Dictionary<string, Joueur> Joueurgrotte;
         public Camp leCamp;
 
         public Grotte ()
@@ -24,15 +24,15 @@ namespace DiamonDMain
         {
             this.Etat = Etatgrotte;
         }
-        public Dictionary<int, Joueur> getjoueurGrotte()
+        public Dictionary<string, Joueur> getjoueurGrotte()
         {
             return Joueurgrotte;
         }
-        public void Initjoueurs(Dictionary<int, Joueur> Joueur)
+        public void Initjoueurs(Dictionary<string, Joueur> Joueur)
         {
             this.Joueurgrotte = Joueur;
         }
-        public int addGrotteUtilisateur(int joueur)
+        public string addGrotteUtilisateur(string joueur)
         {
             if (leCamp.JoueurCamp.ContainsKey(joueur))
             {
@@ -41,5 +41,6 @@ namespace DiamonDMain
             leCamp.JoueurCamp.Remove(joueur);
             return joueur;
         }
+
     }
 }

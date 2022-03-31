@@ -37,13 +37,13 @@ namespace DiamonDMain
         public string name { get; set; }
         public int quantity { get; set; }
 
-        public Danger(String name) : base("Danger")
+        public Danger(string name = "Caillou") : base("Danger")
         {
             this.name = name;
         }
-        public Danger() : base("Danger")
-        {
-        }
+        //public Danger() : base("Danger")
+        //{
+        //}
         public String GetPiege()
         {
             return this.name;
