@@ -51,6 +51,8 @@ namespace DiamonDMain
     }
     public class Trophee : Carte
     {
+        public int montantTrophee { get; set; }
+
         public Trophee() : base("Trophee")
         {
 
