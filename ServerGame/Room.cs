@@ -12,45 +12,32 @@ namespace ServerGame
     {
         private static IPAddress ip = new IPAddress(new byte[] { 127, 0, 0, 1 });
         private static IPEndPoint newEndPoint;
-        public static Socket room = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        private static Socket room;
         private static int port;
         private static int maxconnexions;
         private static int connexions;
 
-        public static async void StartServer(int lePort, int max)
+        private static Task createRoom;
+
+        public static async Task<Socket> StartServer(IPEndPoint endPoint, int max)
         {
+            newEndPoint = endPoint;
             if (connexions == max || connexions == 0)
             {
-                await Task.Run(() =>
+                createRoom = Task.Run(() =>
                 {
-                    port = lePort;
                     maxconnexions = max;
 
                     //on créer un serveur (une salle) qui récupère les joueurs
-                    newEndPoint = new IPEndPoint(ip, port);
+                    room  = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                    
                     room.Bind(newEndPoint);
-                    room.Listen(maxconnexions);
-
-                    Socket server = room.Accept();
-                    connexions++;
+                    room.Listen(maxconnexions + 1);
                 });
+                await createRoom;
             }
-            else
-            {
-                await Task.Run(() =>
-                {
-                    Socket server = room.Accept();
-                    connexions++;
-                });
-            }
-            
-            
-
-            //var thread = new Thread(() =>
-            //{
-
-            //});
-            //thread.Start();
+            connexions++;
+            return room;
         }
     }
 }

@@ -12,6 +12,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -166,8 +167,8 @@ namespace Server
         public static void CreateRoom(int port)
         {
             //on créer un serveur (une salle) qui récupère les joueurs
-            ServerGame.Room.StartServer(port, serverChoose.maxconnexions);
-
+            //ServerGame.Room.StartServer(port, serverChoose.maxconnexions);
+            
             //IPEndPoint newEndPoint = new IPEndPoint(ip, port);
             //roomCreate = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
@@ -251,25 +252,42 @@ namespace Server
                 if (!envoiID)
                     client.Close();
 
+                string OK = Get(client);
+
                 //Envoi port (5)
                 int roomPort = SendPort(client);
                 if (roomPort == -1)
                     client.Close();
+
+                OK = Get(client);
 
                 //Envoi OK ou KO si connexion accepté(5) et créer la room
                 if (envoiProtocol && envoiID)
                 {
                     SendOKorKO(1, client);
 
-
+                    OK = Get(client);
                     //Créer salle et attend tous les joueurs
 
-                    CreateRoom(roomPort);
+                    //CreateRoom(roomPort);
 
+                    IPEndPoint newEndPoint = new(ip, roomPort);
+                    Task<Socket> task = ServerGame.Room.StartServer(newEndPoint, serverChoose.maxconnexions);
+                    
 
                     SendOKorKO(1, client);
+                    task.Wait();
                     client.Close();
 
+                    Socket room = task.Result;
+                    connexions++;
+
+
+                        Socket server = room.Accept();
+
+                    
+                    
+                    
                     //ReceiveIdPassword(client);
                 }
                 else

@@ -54,26 +54,31 @@ namespace ClientTest
                 CheckKO(data, socket);
                 string ID = data;
 
+                SendOKorKO(1, socket);
+
                 length = socket.Receive(buffer);
                 data = Encoding.ASCII.GetString(buffer, 0, length);
                 CheckKO(data, socket);
                 int port = int.Parse(data);
+
+                SendOKorKO(1, socket);
 
                 length = socket.Receive(buffer);
                 data = Encoding.ASCII.GetString(buffer, 0, length);
                 CheckKO(data, socket);
                 string OK = data;
 
+                SendOKorKO(1, socket);
+
                 if (OK == "OK")
                 {
                     length = socket.Receive(buffer);
                     data = Encoding.ASCII.GetString(buffer, 0, length);
                     CheckKO(data, socket);
-                    string test = data;
+                    OK = data;
+
                     //Client se déconnecte du serveur et se connecte à la salle (7)
-
                     Socket room = RoomConnect(port);
-
                     
 
                 }
@@ -199,6 +204,17 @@ namespace ClientTest
                 Stop(socket);            
         }
 
+        public void SendOKorKO(int i, Socket socket)
+        {
+            if (i == 1)
+                socket.Send(Encoding.ASCII.GetBytes("OK"));
+            else
+            {
+                socket.Send(Encoding.ASCII.GetBytes("KO"));
+                socket.Close();
+            }
+        }
+
         public static void Stop(Socket socket)
         {
             socket.Shutdown(SocketShutdown.Both);
@@ -216,7 +232,7 @@ namespace ClientTest
             Socket room = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             room.Connect(newEndPoint);
-            Console.WriteLine("Vous êtes dans une salle.");
+            Console.WriteLine("Vous êtes dans la salle : " + port);
             return room;
         }        
 
