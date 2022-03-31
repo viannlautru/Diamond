@@ -13,7 +13,8 @@ namespace DiamonDMain
 
         public string id { get; set; }
         public int maxplayers { get; set; }
-        public static int caves { get; set; }
+        public int caves { get; set; }
+        public static int caves1 { get; set; }
         public int cardsquantity { get; set; }
         public List<Danger> traps { get; set; }
 
@@ -28,6 +29,7 @@ namespace DiamonDMain
         {
             this.type = 0;
             CreateCaves();
+            caves = caves1;
         }
 
         public static List<Carte> allCards = new List<Carte>();
@@ -40,7 +42,6 @@ namespace DiamonDMain
         {
             var choix = "";
             List<string> liste = new List<string>();
-            int id = -1;
             while (!stop)
             {
                 CreateCaves();
@@ -50,8 +51,7 @@ namespace DiamonDMain
                     Console.WriteLine("Continuer? Oui/Non");
                     choix = Console.ReadLine();
                     if (choix == "Non")
-
-                        liste.Add(Console.ReadLine());
+                        liste.Add(choix);
                 } while (laGrotte.getjoueurGrotte().Count != liste.Count);
             }
         }
@@ -65,10 +65,10 @@ namespace DiamonDMain
         }
         public static void CreateCaves()
         {
-            if (caves <= 0)
+            if (caves1 <= 0)
                 EndGame();
             else
-                caves--;
+                caves1--;
         }
         public static void EndGame()
         {
