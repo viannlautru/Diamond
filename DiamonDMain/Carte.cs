@@ -34,8 +34,8 @@ namespace DiamonDMain
     }
     public class Danger : Carte
     {
-        private string name { get; set; }
-        private int quantity { get; set; }
+        public string name { get; set; }
+        public int quantity { get; set; }
 
         public Danger(String name = "") : base("Danger")
         {
