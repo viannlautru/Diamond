@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -27,15 +29,28 @@ namespace DiamonDMain
             thePath = thePath.Replace(@"\bin\Debug\net6.0", "");
             return thePath;
         }
-        public static Object DeserializeGame()
+        public static List<Partie> DeserializeGame(string name)
         {
-            String path = @"../../../../Server\Ressources\Server.yaml";
-            var deserializer = new YamlDotNet.Serialization.DeserializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
-            .Build();
-            Dictionary<String, Object> config = deserializer.Deserialize<Dictionary<String, Object>>(File.ReadAllText(path));
-            var a = config.Values.ElementAt(2);
-            return a;
+            string path = @"../../../../Server\Ressources\" + name + ".yaml";
+            var parser = new Parser(new StringReader(File.ReadAllText(path)));
+            var deserializer = new DeserializerBuilder()
+            .WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
+
+            parser.Consume<StreamStart>();
+            parser.Consume<DocumentStart>();
+            parser.Consume<MappingStart>();
+            List<Partie> conf = new();
+            while (parser.TryConsume<Scalar>(out var key))
+            {
+                if (key.Value == "games")
+                    conf = deserializer.Deserialize<List<Partie>>(parser);
+                else
+                    parser.SkipThisAndNestedEvents();
+
+                
+            }
+
+            return conf;
         }
 
     }

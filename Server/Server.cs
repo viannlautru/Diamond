@@ -227,7 +227,7 @@ namespace Server
             return send;
         }
 
-        public static async void ConnectClient(Socket client)
+        public static void ConnectClient(Socket client)
         {
             if (connexions == serverChoose.maxconnexions)
             {
@@ -307,63 +307,10 @@ namespace Server
                     ready.Wait();
 
                     //Game
+                    Task start = ServerGame.Room.Game();
+                    start.Wait();
 
 
-
-                    //Socket room = task.Result;
-                    
-
-                    //client = room.Accept();
-                    //sockets.Add(roomPort.ToString() + envoiID, client);
-
-                    ////Reçoit id de session (8)
-                    //string idSession = Get(client);
-
-                    ////Reçoit password (8)
-                    //pwdClient = Get(client);
-
-                    ////Envoi OK ou KO (9)
-                    //if (pwdClient == serverChoose.password)
-                    //    SendOKorKO(1, client);
-                    //else
-                    //    SendOKorKO(0, client);
-
-                    //OK = Get(client);
-
-                    ////Créer joueur et ajoute dans la liste
-                    //CreatePlayer(name, idSession);
-
-                    ////Envoi PLAY
-                    //if (serverChoose.maxconnexions == ServerGame.Room.connexions)
-                    //{
-                    //    foreach (var key in sockets.Keys)
-                    //    {
-                    //        Socket model = sockets[key];
-                    //        int port = int.Parse(key.Substring(0, 5));
-                    //        if (port == roomPort)
-                    //        {
-                    //            bool envoiPlay = SendPlay(model);
-                    //            if (!envoiPlay)
-                    //                model.Close();
-                    //        }
-                    //    }
-                    //}
-
-                    //OK = Get(client);
-
-                    ////Envoi instructions
-
-                    //if (serverChoose.maxconnexions == ServerGame.Room.connexions)
-                    //{
-                    //    foreach (var key in sockets.Keys)
-                    //    {
-                    //        Socket model = sockets[key];
-                    //        bool envoi = SendInstructions(model);
-                    //        if (!envoi)
-                    //            model.Close();
-                            
-                    //    }
-                    //}
                 }
                 else
                 {
@@ -496,11 +443,11 @@ namespace Server
 
         public void Test()
         {
-            Server s = new Server("Diamond", 1234, "123", 2, 3000, "jeu");
-            List<Server> servers = new List<Server>();
-            servers.Add(s);
-            Ressources.Config c = new("conf", servers);
-            string serv = DiamonDMain.Yaml.Serialize(c);
+            //Server s = new Server("Diamond", 1234, "123", 2, 3000, "jeu");
+            //List<Server> servers = new List<Server>();
+            //servers.Add(s);
+            //Ressources.Config c = new("conf", servers);
+            //string serv = DiamonDMain.Yaml.Serialize(c);
         }
     }
 }

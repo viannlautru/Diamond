@@ -115,6 +115,15 @@ namespace ServerGame
             
         }
 
+        public static async Task Game()
+        {
+            Task start = Task.Run(() =>
+            {
+
+            });
+            await start;
+        }
+
         public static string Get(Socket client)
         {
             byte[] buffer = new byte[1024];

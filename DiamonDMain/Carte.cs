@@ -26,16 +26,10 @@ namespace DiamonDMain
     }
     public class Danger : Carte
     {
-        private string name;
-        private int quantity;
-                                     
-        public Danger(String name = "") : base("Danger"){
-            this.name = name;
-        }
-        public String GetPiege()
-        {
-            return this.name;
-        }
+        public string name { get; set; }
+        public int quantity { get; set; }
+        public Danger() : base("Danger") { }
+                                    
     }
     public class Trophee : Carte
     {
