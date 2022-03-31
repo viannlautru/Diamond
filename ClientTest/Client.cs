@@ -110,6 +110,8 @@ namespace ClientTest
 
                     Console.WriteLine(play);
 
+                    SendOKorKO(1, room);
+
                     //Reçoit instructions
                     buffer = new byte[2048];
                     length = room.Receive(buffer);
@@ -118,6 +120,8 @@ namespace ClientTest
                     string instructions = data;
 
                     Console.WriteLine(instructions);
+
+                    SendOKorKO(1, room);
 
                     //Reçoit OK ou KO
                     length = room.Receive(buffer);
