@@ -12,7 +12,7 @@ namespace DiamonDMain
         public string id { get; set; }
         public int maxplayers { get; set; }
         public int caves { get; set; }
-        public int allCardsquantity { get; set; }
+        public int cardsquantity { get; set; }
         public List<Danger> traps { get; set; }
 
 
